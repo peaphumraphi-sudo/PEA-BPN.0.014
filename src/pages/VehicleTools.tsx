@@ -186,53 +186,58 @@ export function VehicleTools({ user }: VehicleToolsProps) {
           ) : filteredAndSortedTools.length === 0 ? (
             <div className="p-8 text-center text-gray-500">ไม่พบข้อมูล</div>
           ) : (
-            filteredAndSortedTools.map((tool) => (
-              <div key={tool.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900 mb-1">{tool.name}</h3>
-                  <p className="text-xs text-gray-500 font-mono">{tool.id} • จำนวน: {tool.qty}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-0 sm:gap-4 lg:gap-0 p-0 sm:p-4 lg:p-0">
+              {filteredAndSortedTools.map((tool) => (
+                <div key={tool.id} className="p-4 sm:p-5 sm:bg-white sm:rounded-2xl sm:border sm:border-gray-100 lg:border-0 lg:border-b lg:rounded-none lg:bg-transparent flex flex-col sm:flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 text-lg lg:text-base mb-1">{tool.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-0.5 rounded-md">{tool.id}</p>
+                      <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">จำนวน: {tool.qty}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 shrink-0 bg-gray-50 sm:bg-transparent p-2 sm:p-0 rounded-xl">
+                    <button
+                      onClick={() => handleStatusChange(tool.id, 'complete')}
+                      className={cn(
+                        "flex flex-col sm:flex-row items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 rounded-xl sm:rounded-lg text-xs sm:text-sm font-bold transition-all border",
+                        tool.status === 'complete' 
+                          ? "bg-emerald-500 border-emerald-600 text-white shadow-md shadow-emerald-500/20" 
+                          : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
+                      )}
+                    >
+                      <CheckCircle2 size={18} className={cn(tool.status === 'complete' ? "text-white" : "text-gray-400")} /> 
+                      <span>ครบ</span>
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(tool.id, 'incomplete')}
+                      className={cn(
+                        "flex flex-col sm:flex-row items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 rounded-xl sm:rounded-lg text-xs sm:text-sm font-bold transition-all border",
+                        tool.status === 'incomplete' 
+                          ? "bg-orange-500 border-orange-600 text-white shadow-md shadow-orange-500/20" 
+                          : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
+                      )}
+                    >
+                      <XCircle size={18} className={cn(tool.status === 'incomplete' ? "text-white" : "text-gray-400")} /> 
+                      <span>ไม่ครบ</span>
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(tool.id, 'damaged')}
+                      className={cn(
+                        "flex flex-col sm:flex-row items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 rounded-xl sm:rounded-lg text-xs sm:text-sm font-bold transition-all border",
+                        tool.status === 'damaged' 
+                          ? "bg-red-500 border-red-600 text-white shadow-md shadow-red-500/20" 
+                          : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
+                      )}
+                    >
+                      <AlertCircle size={18} className={cn(tool.status === 'damaged' ? "text-white" : "text-gray-400")} /> 
+                      <span>ชำรุด</span>
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => handleStatusChange(tool.id, 'complete')}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all border",
-                      tool.status === 'complete' 
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm" 
-                        : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
-                    )}
-                  >
-                    <CheckCircle2 size={16} className={cn(tool.status === 'complete' ? "text-emerald-500" : "text-gray-400")} /> 
-                    ครบ
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(tool.id, 'incomplete')}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all border",
-                      tool.status === 'incomplete' 
-                        ? "bg-orange-50 border-orange-200 text-orange-700 shadow-sm" 
-                        : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
-                    )}
-                  >
-                    <XCircle size={16} className={cn(tool.status === 'incomplete' ? "text-orange-500" : "text-gray-400")} /> 
-                    ไม่ครบ
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(tool.id, 'damaged')}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all border",
-                      tool.status === 'damaged' 
-                        ? "bg-red-50 border-red-200 text-red-700 shadow-sm" 
-                        : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
-                    )}
-                  >
-                    <AlertCircle size={16} className={cn(tool.status === 'damaged' ? "text-red-500" : "text-gray-400")} /> 
-                    ชำรุด
-                  </button>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>

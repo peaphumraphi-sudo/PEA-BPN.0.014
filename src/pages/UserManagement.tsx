@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { Users, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { api } from '../services/api';
 import { cn } from '../utils/cn';
@@ -57,7 +57,7 @@ export function UserManagement({ user }: UserManagementProps) {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!username || !pin || !name) {
       alert('กรุณากรอกข้อมูลให้ครบถ้วน');

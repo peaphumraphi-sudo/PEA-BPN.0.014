@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Truck, CheckCircle2, AlertCircle, Save, User, Search, Filter, ArrowUpDown } from 'lucide-react';
+import { Truck, CheckCircle2, AlertCircle, Save, User, Search, Filter, ArrowUpDown, Plus, Minus } from 'lucide-react';
 import { api } from '../services/api';
 import { cn } from '../utils/cn';
 
@@ -190,40 +190,56 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
           ) : filteredAndSortedItems.length === 0 ? (
             <div className="p-8 text-center text-gray-500">ไม่พบข้อมูล</div>
           ) : (
-            filteredAndSortedItems.map((item) => {
-              const isLowStock = item.current < item.min;
-              return (
-                <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
-                      {isLowStock && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700 uppercase tracking-wider">
-                          <AlertCircle size={10} /> ต่ำกว่าเกณฑ์ ({item.min})
-                        </span>
-                      )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-0 sm:gap-4 lg:gap-0 p-0 sm:p-4 lg:p-0">
+              {filteredAndSortedItems.map((item) => {
+                const isLowStock = item.current < item.min;
+                return (
+                  <div key={item.id} className="p-4 sm:p-5 sm:bg-white sm:rounded-2xl sm:border sm:border-gray-100 lg:border-0 lg:border-b lg:rounded-none lg:bg-transparent flex flex-col sm:flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-gray-900 text-lg lg:text-base">{item.name}</h3>
+                        {isLowStock && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700 uppercase tracking-wider">
+                            <AlertCircle size={10} /> ต่ำกว่าเกณฑ์ ({item.min})
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 font-mono bg-gray-100 inline-block px-2 py-0.5 rounded-md">{item.id}</p>
                     </div>
-                    <p className="text-xs text-gray-500 font-mono">{item.id}</p>
+                    
+                    <div className="flex items-center justify-between sm:justify-start gap-4 shrink-0 bg-gray-50 sm:bg-transparent p-3 sm:p-0 rounded-xl">
+                      <span className="text-sm font-bold text-gray-600 sm:hidden">จำนวนคงเหลือ:</span>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => handleQuantityChange(item.id, item.current - 1)}
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
+                        >
+                          <Minus size={18} />
+                        </button>
+                        <input 
+                          type="number" 
+                          min="0"
+                          value={item.current}
+                          onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                          className={cn(
+                            "w-16 text-center h-10 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all font-bold text-lg",
+                            isLowStock 
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500/50 text-red-600" 
+                              : "border-gray-200 focus:border-purple-500 focus:ring-purple-500/50 text-gray-900"
+                          )}
+                        />
+                        <button 
+                          onClick={() => handleQuantityChange(item.id, item.current + 1)}
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
+                        >
+                          <Plus size={18} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-sm font-medium text-gray-500">คงเหลือ:</span>
-                    <input 
-                      type="number" 
-                      min="0"
-                      value={item.current}
-                      onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                      className={cn(
-                        "w-20 text-center px-3 py-2 bg-white border rounded-xl focus:outline-none focus:ring-2 transition-all font-bold",
-                        isLowStock 
-                          ? "border-red-300 focus:border-red-500 focus:ring-red-500/50 text-red-600" 
-                          : "border-gray-200 focus:border-purple-500 focus:ring-purple-500/50 text-gray-900"
-                      )}
-                    />
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
