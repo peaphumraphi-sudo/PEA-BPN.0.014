@@ -12,7 +12,6 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [sender, setSender] = useState('');
   const [receiver, setReceiver] = useState(user?.name || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'normal' | 'low'>('all');
@@ -77,19 +76,21 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
       return;
     }
 
-    setIsSubmitting(true);
+    // Optimistic: Show success immediately
+    const originalItems = [...items];
+    alert('กำลังบันทึกข้อมูล... (คุณสามารถทำงานต่อได้ทันที)');
+    
     try {
       const response = await api.saveVehicleChecklist(items, sender, receiver);
-      if (response.success) {
-        alert('บันทึกข้อมูลลง Google Sheet สำเร็จ');
-      } else {
-        alert(`เกิดข้อผิดพลาด: ${response.message}`);
+      if (!response.success) {
+        alert(`เกิดข้อผิดพลาดในการบันทึก: ${response.message}`);
+        // Optionally revert or reload
+        loadData();
       }
     } catch (error) {
       console.error(error);
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
-    } finally {
-      setIsSubmitting(false);
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบขณะบันทึก');
+      loadData();
     }
   };
 
@@ -247,16 +248,10 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
       <div className="flex justify-end">
         <button 
           onClick={handleSubmit}
-          disabled={isSubmitting || isLoading}
+          disabled={isLoading}
           className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {isSubmitting ? (
-            'กำลังบันทึก...'
-          ) : (
-            <>
-              <Save size={20} /> บันทึกผลการตรวจเช็ค
-            </>
-          )}
+          <Save size={20} /> บันทึกผลการตรวจเช็ค
         </button>
       </div>
     </div>

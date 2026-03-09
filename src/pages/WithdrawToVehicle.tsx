@@ -15,7 +15,6 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
   // Manual withdraw state
   const [withdrawItemCode, setWithdrawItemCode] = useState('');
   const [withdrawQuantity, setWithdrawQuantity] = useState(1);
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const loadData = async () => {
@@ -47,26 +46,40 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
 
     if (!cleanCode || cleanQty <= 0) return;
     
-    setIsWithdrawing(true);
+    const originalItems = [...items];
+    
+    // Optimistic Update: Update vehicle inventory locally
+    setItems(prev => {
+      const existingItem = prev.find(i => i.id === cleanCode);
+      if (existingItem) {
+        return prev.map(i => i.id === cleanCode ? { ...i, current: i.current + cleanQty } : i);
+      } else {
+        // If item doesn't exist in vehicle inventory yet, we can't easily show it without name
+        // But we'll reload anyway. For existing items, it will be instant.
+        return prev;
+      }
+    });
+
+    if (isManual) {
+      setWithdrawItemCode('');
+      setWithdrawQuantity(1);
+    }
+
     try {
       const response = await api.withdrawToVehicle(cleanCode, cleanQty, user.name);
       
-      if (response.success) {
-        alert('เบิกของเข้ารถสำเร็จ และตัดยอดในคลังหลักเรียบร้อยแล้ว');
-        if (isManual) {
-          setWithdrawItemCode('');
-          setWithdrawQuantity(1);
-        }
-        // Reload data to reflect new quantities
-        loadData();
-      } else {
+      if (!response.success) {
+        // Revert on failure
+        setItems(originalItems);
         alert(`เกิดข้อผิดพลาด: ${response.message}`);
+      } else {
+        // Optional: Show a subtle success toast instead of alert
+        console.log('Withdrawal successful');
       }
     } catch (error) {
       console.error(error);
+      setItems(originalItems);
       alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
-    } finally {
-      setIsWithdrawing(false);
     }
   };
 
@@ -124,7 +137,6 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
                   <div className="flex items-center gap-3 shrink-0">
                     <button 
                       onClick={() => handleWithdraw(item.id, suggestedQty)}
-                      disabled={isWithdrawing}
                       className="px-4 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                       <PackagePlus size={16} /> เบิกเพิ่ม {suggestedQty} ชิ้น
@@ -176,10 +188,10 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
           <div className="pt-2">
             <button 
               onClick={() => handleWithdraw(withdrawItemCode, withdrawQuantity, true)}
-              disabled={isWithdrawing || !withdrawItemCode.trim()}
+              disabled={!withdrawItemCode.trim()}
               className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
             >
-              {isWithdrawing ? 'กำลังดำเนินการ...' : <><PackagePlus size={20} /> ยืนยันการเบิก</>}
+              <PackagePlus size={20} /> ยืนยันการเบิก
             </button>
           </div>
         </div>

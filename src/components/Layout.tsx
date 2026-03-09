@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Package, Truck, Wrench, LayoutDashboard, LogOut, Menu, X, PackagePlus, Users } from 'lucide-react';
+import { Package, Truck, Wrench, LayoutDashboard, LogOut, Menu, X, PackagePlus, Users, QrCode } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../utils/cn';
 
@@ -18,6 +18,7 @@ export function Layout({ children, user, onLogout }: LayoutProps) {
   const navItems = [
     { path: '/', label: 'แดชบอร์ด', icon: LayoutDashboard, roles: ['admin'] },
     { path: '/main', label: 'คลังพัสดุหลัก', icon: Package, roles: ['admin'] },
+    { path: '/qr-generator', label: 'สร้าง QR Code', icon: QrCode, roles: ['admin'] },
     { path: '/vehicle', label: 'คลังพัสดุประจำรถ', icon: Truck, roles: ['admin', 'user'] },
     { path: '/withdraw-vehicle', label: 'เบิกของเข้ารถ', icon: PackagePlus, roles: ['admin', 'user'] },
     { path: '/tools', label: 'เครื่องมือประจำรถ', icon: Wrench, roles: ['admin', 'user'] },

@@ -12,7 +12,6 @@ export function VehicleTools({ user }: VehicleToolsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [sender, setSender] = useState('');
   const [receiver, setReceiver] = useState(user?.name || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'complete' | 'incomplete' | 'damaged'>('all');
@@ -74,19 +73,19 @@ export function VehicleTools({ user }: VehicleToolsProps) {
       return;
     }
 
-    setIsSubmitting(true);
+    // Optimistic: Show success immediately
+    alert('กำลังบันทึกข้อมูลเครื่องมือ... (คุณสามารถทำงานต่อได้ทันที)');
+    
     try {
       const response = await api.saveToolChecklist(tools, sender, receiver);
-      if (response.success) {
-        alert('บันทึกข้อมูลลง Google Sheet สำเร็จ');
-      } else {
-        alert(`เกิดข้อผิดพลาด: ${response.message}`);
+      if (!response.success) {
+        alert(`เกิดข้อผิดพลาดในการบันทึกเครื่องมือ: ${response.message}`);
+        loadData();
       }
     } catch (error) {
       console.error(error);
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
-    } finally {
-      setIsSubmitting(false);
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบขณะบันทึกเครื่องมือ');
+      loadData();
     }
   };
 
@@ -245,16 +244,10 @@ export function VehicleTools({ user }: VehicleToolsProps) {
       <div className="flex justify-end">
         <button 
           onClick={handleSubmit}
-          disabled={isSubmitting || isLoading}
+          disabled={isLoading}
           className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {isSubmitting ? (
-            'กำลังบันทึก...'
-          ) : (
-            <>
-              <Save size={20} /> บันทึกผลการตรวจเช็ค
-            </>
-          )}
+          <Save size={20} /> บันทึกผลการตรวจเช็ค
         </button>
       </div>
     </div>

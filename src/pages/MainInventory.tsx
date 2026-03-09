@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Minus, AlertCircle, QrCode, X, ArrowUpDown, Filter } from 'lucide-react';
+import { Search, Plus, Minus, AlertCircle, QrCode, X, ArrowUpDown, Filter, Printer } from 'lucide-react';
 import { api } from '../services/api';
 import { cn } from '../utils/cn';
 import { QRScanner } from '../components/QRScanner';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface MainInventoryProps {
   user: any;
@@ -16,8 +17,8 @@ export function MainInventory({ user }: MainInventoryProps) {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [transactionType, setTransactionType] = useState<'in' | 'out'>('out');
   const [quantity, setQuantity] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [qrViewItem, setQrViewItem] = useState<any>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'normal' | 'low'>('all');
 
@@ -79,28 +80,31 @@ export function MainInventory({ user }: MainInventoryProps) {
   };
 
   const submitTransaction = async () => {
-    setIsSubmitting(true);
+    const originalItems = [...items];
+    const newQuantity = transactionType === 'in' ? selectedItem.current + quantity : selectedItem.current - quantity;
+    
+    // Optimistic Update
+    setItems(prev => prev.map(item => {
+      if (item.id === selectedItem.id) {
+        return { ...item, current: newQuantity };
+      }
+      return item;
+    }));
+    
+    setIsModalOpen(false);
+    
     try {
       const response = await api.transaction(transactionType, selectedItem.id, quantity, user.name);
       
-      if (response.success) {
-        // Update local state
-        setItems(prev => prev.map(item => {
-          if (item.id === selectedItem.id) {
-            const newCurrent = transactionType === 'in' ? item.current + quantity : item.current - quantity;
-            return { ...item, current: newCurrent };
-          }
-          return item;
-        }));
-        setIsModalOpen(false);
-      } else {
+      if (!response.success) {
+        // Revert on failure
+        setItems(originalItems);
         alert(`เกิดข้อผิดพลาด: ${response.message}`);
       }
     } catch (error) {
       console.error(error);
+      setItems(originalItems);
       alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -213,6 +217,13 @@ export function MainInventory({ user }: MainInventoryProps) {
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button 
+                            onClick={() => setQrViewItem(item)}
+                            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="ดู QR Code"
+                          >
+                            <QrCode size={18} />
+                          </button>
+                          <button 
                             onClick={() => handleTransaction(item, 'in')}
                             className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors text-sm font-medium flex items-center gap-1 border border-emerald-200"
                             title="รับเข้า"
@@ -295,7 +306,7 @@ export function MainInventory({ user }: MainInventoryProps) {
               <div className="pt-2">
                 <button 
                   onClick={submitTransaction}
-                  disabled={isSubmitting || (transactionType === 'out' && quantity > selectedItem.current)}
+                  disabled={transactionType === 'out' && quantity > selectedItem.current}
                   className={cn(
                     "w-full py-3.5 rounded-xl font-bold text-white transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
                     transactionType === 'in' 
@@ -303,7 +314,7 @@ export function MainInventory({ user }: MainInventoryProps) {
                       : "bg-orange-600 hover:bg-orange-500 shadow-orange-500/25"
                   )}
                 >
-                  {isSubmitting ? 'กำลังบันทึก...' : 'ยืนยัน'}
+                  ยืนยัน
                 </button>
               </div>
             </div>
@@ -317,6 +328,36 @@ export function MainInventory({ user }: MainInventoryProps) {
           onScanSuccess={handleScanSuccess} 
           onClose={() => setIsScannerOpen(false)} 
         />
+      )}
+
+      {/* QR Code View Modal */}
+      {qrViewItem && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xs overflow-hidden transform transition-all p-8 flex flex-col items-center space-y-6">
+            <div className="flex justify-between items-center w-full">
+              <h3 className="font-bold text-gray-900">QR Code พัสดุ</h3>
+              <button onClick={() => setQrViewItem(null)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+            
+            <div className="p-4 bg-white border-4 border-gray-50 rounded-2xl shadow-inner">
+              <QRCodeSVG value={qrViewItem.id} size={200} level="H" />
+            </div>
+            
+            <div className="text-center space-y-1">
+              <p className="text-sm font-bold font-mono text-gray-500 uppercase tracking-widest">{qrViewItem.id}</p>
+              <p className="text-base font-bold text-gray-900 leading-tight">{qrViewItem.name}</p>
+            </div>
+            
+            <button 
+              onClick={() => window.print()}
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2"
+            >
+              <Printer size={20} /> พิมพ์รหัสนี้
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

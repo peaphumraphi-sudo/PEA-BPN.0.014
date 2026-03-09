@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { MainInventory } from './pages/MainInventory';
+import { QRGenerator } from './pages/QRGenerator';
 import { VehicleInventory } from './pages/VehicleInventory';
 import { WithdrawToVehicle } from './pages/WithdrawToVehicle';
 import { VehicleTools } from './pages/VehicleTools';
@@ -64,6 +65,19 @@ export default function App() {
             user ? (
               <Layout user={user} onLogout={handleLogout}>
                 {user.role === 'admin' ? <MainInventory user={user} /> : <Navigate to="/vehicle" replace />}
+              </Layout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/qr-generator"
+          element={
+            user ? (
+              <Layout user={user} onLogout={handleLogout}>
+                {user.role === 'admin' ? <QRGenerator /> : <Navigate to="/vehicle" replace />}
               </Layout>
             ) : (
               <Navigate to="/login" replace />
