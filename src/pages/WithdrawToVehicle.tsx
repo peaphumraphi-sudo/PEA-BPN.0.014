@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PackagePlus, AlertCircle, QrCode, Search, CheckCircle2 } from 'lucide-react';
+import { PackagePlus, AlertCircle, QrCode, Search, CheckCircle2, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 import { cn } from '../utils/cn';
 import { QRScanner } from '../components/QRScanner';
@@ -17,6 +17,7 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
   const [withdrawQuantity, setWithdrawQuantity] = useState(1);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -72,13 +73,16 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
       setWithdrawQuantity(1);
     }
 
+    setIsWithdrawing(true);
+    setSuccessMessage(`กำลังเบิกพัสดุ ${cleanCode}...`);
+
     try {
       const response = await api.withdrawToVehicle(cleanCode, cleanQty, user.name);
       
       if (!response.success) {
         // Revert on failure
         setItems(originalItems);
-        alert(`เกิดข้อผิดพลาด: ${response.message}`);
+        setSuccessMessage(`เกิดข้อผิดพลาด: ${response.message}`);
       } else {
         setSuccessMessage(`เบิกพัสดุ ${cleanCode} จำนวน ${cleanQty} ชิ้น สำเร็จแล้ว`);
         console.log('Withdrawal successful');
@@ -86,7 +90,9 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
     } catch (error) {
       console.error(error);
       setItems(originalItems);
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
+      setSuccessMessage('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
@@ -144,9 +150,15 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
                   <div className="flex items-center gap-3 shrink-0">
                     <button 
                       onClick={() => handleWithdraw(item.id, suggestedQty)}
+                      disabled={isWithdrawing}
                       className="px-4 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
-                      <PackagePlus size={16} /> เบิกเพิ่ม {suggestedQty} ชิ้น
+                      {isWithdrawing && successMessage?.includes(item.id) ? (
+                        <RefreshCw size={16} className="animate-spin" />
+                      ) : (
+                        <PackagePlus size={16} />
+                      )}
+                      เบิกเพิ่ม {suggestedQty} ชิ้น
                     </button>
                   </div>
                 </div>
@@ -195,10 +207,15 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
           <div className="pt-2">
             <button 
               onClick={() => handleWithdraw(withdrawItemCode, withdrawQuantity, true)}
-              disabled={!withdrawItemCode.trim()}
+              disabled={!withdrawItemCode.trim() || isWithdrawing}
               className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
             >
-              <PackagePlus size={20} /> ยืนยันการเบิก
+              {isWithdrawing ? (
+                <RefreshCw size={20} className="animate-spin" />
+              ) : (
+                <PackagePlus size={20} />
+              )}
+              {isWithdrawing ? 'กำลังเบิก...' : 'ยืนยันการเบิก'}
             </button>
           </div>
         </div>
@@ -214,9 +231,16 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
       {/* Success Toast */}
       {successMessage && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-green-500/20 backdrop-blur-sm">
+          <div className={cn(
+            "px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border backdrop-blur-sm",
+            successMessage.includes('ผิดพลาด') ? "bg-red-600 text-white border-red-500/20" : 
+            successMessage.includes('กำลัง') ? "bg-indigo-600 text-white border-indigo-500/20" :
+            "bg-green-600 text-white border-green-500/20"
+          )}>
             <div className="bg-white/20 p-1 rounded-full">
-              <CheckCircle2 size={18} />
+              {successMessage.includes('ผิดพลาด') ? <AlertCircle size={18} /> : 
+               successMessage.includes('กำลัง') ? <RefreshCw size={18} className="animate-spin" /> :
+               <CheckCircle2 size={18} />}
             </div>
             <span className="font-bold text-sm whitespace-nowrap">{successMessage}</span>
           </div>

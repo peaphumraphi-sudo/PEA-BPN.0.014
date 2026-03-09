@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Minus, AlertCircle, QrCode, X, ArrowUpDown, Filter, Printer, CheckCircle2 } from 'lucide-react';
+import { Search, Plus, Minus, AlertCircle, QrCode, X, ArrowUpDown, Filter, Printer, CheckCircle2, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 import { cn } from '../utils/cn';
 import { QRScanner } from '../components/QRScanner';
@@ -22,6 +22,7 @@ export function MainInventory({ user }: MainInventoryProps) {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'normal' | 'low'>('all');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isAdmin = user?.role === 'admin';
 
@@ -92,6 +93,9 @@ export function MainInventory({ user }: MainInventoryProps) {
     const originalItems = [...items];
     const newQuantity = transactionType === 'in' ? selectedItem.current + quantity : selectedItem.current - quantity;
     
+    setIsSubmitting(true);
+    setSuccessMessage(`กำลัง${transactionType === 'in' ? 'รับเข้า' : 'เบิกออก'}...`);
+    
     // Optimistic Update
     setItems(prev => prev.map(item => {
       if (item.id === selectedItem.id) {
@@ -108,14 +112,16 @@ export function MainInventory({ user }: MainInventoryProps) {
       if (!response.success) {
         // Revert on failure
         setItems(originalItems);
-        alert(`เกิดข้อผิดพลาด: ${response.message}`);
+        setSuccessMessage(`เกิดข้อผิดพลาด: ${response.message}`);
       } else {
         setSuccessMessage(`${transactionType === 'in' ? 'รับเข้า' : 'เบิกออก'} ${selectedItem.name} จำนวน ${quantity} ชิ้น สำเร็จแล้ว`);
       }
     } catch (error) {
       console.error(error);
       setItems(originalItems);
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
+      setSuccessMessage('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -374,9 +380,16 @@ export function MainInventory({ user }: MainInventoryProps) {
       {/* Success Toast */}
       {successMessage && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-green-500/20 backdrop-blur-sm">
+          <div className={cn(
+            "px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border backdrop-blur-sm",
+            successMessage.includes('ผิดพลาด') ? "bg-red-600 text-white border-red-500/20" : 
+            successMessage.includes('กำลัง') ? "bg-indigo-600 text-white border-indigo-500/20" :
+            "bg-green-600 text-white border-green-500/20"
+          )}>
             <div className="bg-white/20 p-1 rounded-full">
-              <CheckCircle2 size={18} />
+              {successMessage.includes('ผิดพลาด') ? <AlertCircle size={18} /> : 
+               successMessage.includes('กำลัง') ? <RefreshCw size={18} className="animate-spin" /> :
+               <CheckCircle2 size={18} />}
             </div>
             <span className="font-bold text-sm whitespace-nowrap">{successMessage}</span>
           </div>

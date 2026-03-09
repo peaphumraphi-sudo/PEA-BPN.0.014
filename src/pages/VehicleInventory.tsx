@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Truck, CheckCircle2, AlertCircle, Save, User, Search, Filter, ArrowUpDown, Plus, Minus } from 'lucide-react';
+import { Truck, CheckCircle2, AlertCircle, Save, User, Search, Filter, ArrowUpDown, Plus, Minus, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 import { cn } from '../utils/cn';
 
@@ -9,6 +9,7 @@ interface VehicleInventoryProps {
 
 export function VehicleInventory({ user }: VehicleInventoryProps) {
   const [items, setItems] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sender, setSender] = useState('');
   const [receiver, setReceiver] = useState(user?.name || '');
@@ -16,15 +17,22 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'normal' | 'low'>('all');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.getVehicleInventory();
-      if (response.success) {
-        setItems(response.items);
-      } else {
-        console.error('Failed to load data:', response.message);
+      const [inventoryRes, usersRes] = await Promise.all([
+        api.getVehicleInventory(),
+        api.getUsers()
+      ]);
+
+      if (inventoryRes.success) {
+        setItems(inventoryRes.items);
+      }
+      
+      if (usersRes.success) {
+        setUsers(usersRes.users);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -80,26 +88,27 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
 
   const handleSubmit = async () => {
     if (!sender || !receiver) {
-      alert('กรุณากรอกชื่อผู้ส่งมอบและผู้รับมอบ');
+      setSuccessMessage('กรุณากรอกชื่อผู้ส่งมอบและผู้รับมอบ');
       return;
     }
 
-    // Optimistic: Show success immediately
-    const originalItems = [...items];
-    alert('กำลังบันทึกข้อมูล... (คุณสามารถทำงานต่อได้ทันที)');
+    setIsSubmitting(true);
+    setSuccessMessage('กำลังบันทึกข้อมูล... กรุณารอสักครู่');
     
     try {
       const response = await api.saveVehicleChecklist(items, sender, receiver);
       if (response.success) {
         setSuccessMessage('บันทึกข้อมูลเช็คลิสต์พัสดุสำเร็จแล้ว');
       } else {
-        alert(`เกิดข้อผิดพลาดในการบันทึก: ${response.message}`);
+        setSuccessMessage(`เกิดข้อผิดพลาด: ${response.message}`);
         loadData();
       }
     } catch (error) {
       console.error(error);
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อระบบขณะบันทึก');
+      setSuccessMessage('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ');
       loadData();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -120,29 +129,37 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-2">
           <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-            <User size={16} className="text-gray-400" /> ผู้ส่งมอบ
+            <User size={16} className="text-gray-400" /> ผู้ส่งมอบ (ชื่อ-นามสกุล)
           </label>
           <input 
             type="text" 
+            list="user-list"
             value={sender}
             onChange={(e) => setSender(e.target.value)}
             className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm"
-            placeholder="ชื่อผู้ส่งมอบ"
+            placeholder="พิมพ์หรือเลือกชื่อผู้ส่งมอบ"
           />
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-2">
           <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-            <User size={16} className="text-gray-400" /> ผู้รับมอบ
+            <User size={16} className="text-gray-400" /> ผู้รับมอบ (ชื่อ-นามสกุล)
           </label>
           <input 
             type="text" 
+            list="user-list"
             value={receiver}
             onChange={(e) => setReceiver(e.target.value)}
             className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm"
-            placeholder="ชื่อผู้รับมอบ"
+            placeholder="พิมพ์หรือเลือกชื่อผู้รับมอบ"
           />
         </div>
       </div>
+
+      <datalist id="user-list">
+        {users.map((u: any) => (
+          <option key={u.username} value={u.name} />
+        ))}
+      </datalist>
 
       <div className="flex flex-col sm:flex-row items-center gap-2 mb-4">
         <div className="relative flex-1 w-full">
@@ -269,19 +286,31 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
       <div className="flex justify-end pb-8">
         <button 
           onClick={handleSubmit}
-          disabled={isLoading}
+          disabled={isLoading || isSubmitting}
           className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl transition-all shadow-xl shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
         >
-          <Save size={20} /> บันทึกผลการตรวจเช็ค
+          {isSubmitting ? (
+            <RefreshCw size={20} className="animate-spin" />
+          ) : (
+            <Save size={20} />
+          )}
+          {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกผลการตรวจเช็ค'}
         </button>
       </div>
 
       {/* Success Toast */}
       {successMessage && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-green-500/20 backdrop-blur-sm">
+          <div className={cn(
+            "px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border backdrop-blur-sm",
+            successMessage.includes('ผิดพลาด') ? "bg-red-600 text-white border-red-500/20" : 
+            successMessage.includes('กำลังบันทึก') ? "bg-indigo-600 text-white border-indigo-500/20" :
+            "bg-green-600 text-white border-green-500/20"
+          )}>
             <div className="bg-white/20 p-1 rounded-full">
-              <CheckCircle2 size={18} />
+              {successMessage.includes('ผิดพลาด') ? <AlertCircle size={18} /> : 
+               successMessage.includes('กำลังบันทึก') ? <RefreshCw size={18} className="animate-spin" /> :
+               <CheckCircle2 size={18} />}
             </div>
             <span className="font-bold text-sm whitespace-nowrap">{successMessage}</span>
           </div>

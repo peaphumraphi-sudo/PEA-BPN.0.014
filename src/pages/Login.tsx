@@ -20,19 +20,13 @@ export function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
 
     try {
-      // Mock login for now, replace with actual API call later
-      // const res = await api.login(username, pin);
+      const response = await api.login(username, pin);
       
-      // Temporary mock logic
-      let role = 'user';
-      if (username === 'admin') role = 'admin';
-      
-      if (username && pin) {
-        const user = { username, name: username, role };
-        onLogin(user);
-        navigate(role === 'admin' ? '/' : '/main');
+      if (response.success) {
+        onLogin(response.user);
+        navigate(response.user.role === 'admin' ? '/' : '/vehicle');
       } else {
-        setError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+        setError(response.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
       }
     } catch (err: any) {
       setError(err.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
