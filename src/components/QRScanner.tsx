@@ -22,7 +22,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       "qr-reader",
       { 
         fps: 10, 
-        qrbox: { width: 250, height: 250 },
+        qrbox: { width: 350, height: 350 },
         aspectRatio: 1.0,
         videoConstraints: {
           facingMode: "environment"
@@ -60,7 +60,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 bg-gray-900 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
