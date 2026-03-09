@@ -16,6 +16,7 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
   const [withdrawItemCode, setWithdrawItemCode] = useState('');
   const [withdrawQuantity, setWithdrawQuantity] = useState(1);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -37,6 +38,14 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
     loadData();
   }, []);
 
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   // Items that need to be restocked (current < min)
   const lowStockItems = items.filter(item => item.current < item.min);
 
@@ -54,8 +63,6 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
       if (existingItem) {
         return prev.map(i => i.id === cleanCode ? { ...i, current: i.current + cleanQty } : i);
       } else {
-        // If item doesn't exist in vehicle inventory yet, we can't easily show it without name
-        // But we'll reload anyway. For existing items, it will be instant.
         return prev;
       }
     });
@@ -73,7 +80,7 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
         setItems(originalItems);
         alert(`เกิดข้อผิดพลาด: ${response.message}`);
       } else {
-        // Optional: Show a subtle success toast instead of alert
+        setSuccessMessage(`เบิกพัสดุ ${cleanCode} จำนวน ${cleanQty} ชิ้น สำเร็จแล้ว`);
         console.log('Withdrawal successful');
       }
     } catch (error) {
@@ -202,6 +209,18 @@ export function WithdrawToVehicle({ user }: WithdrawToVehicleProps) {
           onScanSuccess={handleScanSuccess} 
           onClose={() => setIsScannerOpen(false)} 
         />
+      )}
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-green-500/20 backdrop-blur-sm">
+            <div className="bg-white/20 p-1 rounded-full">
+              <CheckCircle2 size={18} />
+            </div>
+            <span className="font-bold text-sm whitespace-nowrap">{successMessage}</span>
+          </div>
+        </div>
       )}
     </div>
   );

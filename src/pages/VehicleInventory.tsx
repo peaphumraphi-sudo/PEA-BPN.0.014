@@ -15,6 +15,7 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
   const [search, setSearch] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'normal' | 'low'>('all');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -35,6 +36,13 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -82,9 +90,10 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
     
     try {
       const response = await api.saveVehicleChecklist(items, sender, receiver);
-      if (!response.success) {
+      if (response.success) {
+        setSuccessMessage('บันทึกข้อมูลเช็คลิสต์พัสดุสำเร็จแล้ว');
+      } else {
         alert(`เกิดข้อผิดพลาดในการบันทึก: ${response.message}`);
-        // Optionally revert or reload
         loadData();
       }
     } catch (error) {
@@ -191,31 +200,43 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
           ) : filteredAndSortedItems.length === 0 ? (
             <div className="p-8 text-center text-gray-500">ไม่พบข้อมูล</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-0 sm:gap-4 lg:gap-0 p-0 sm:p-4 lg:p-0">
+            <div className="grid grid-cols-1 gap-0">
               {filteredAndSortedItems.map((item) => {
                 const isLowStock = item.current < item.min;
                 return (
-                  <div key={item.id} className="p-4 sm:p-5 sm:bg-white sm:rounded-2xl sm:border sm:border-gray-100 lg:border-0 lg:border-b lg:rounded-none lg:bg-transparent flex flex-col sm:flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-gray-900 text-lg lg:text-base">{item.name}</h3>
-                        {isLowStock && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700 uppercase tracking-wider">
-                            <AlertCircle size={10} /> ต่ำกว่าเกณฑ์ ({item.min})
-                          </span>
-                        )}
+                  <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-0">
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                        isLowStock ? "bg-red-50 text-red-600" : "bg-purple-50 text-purple-600"
+                      )}>
+                        <Truck size={20} />
                       </div>
-                      <p className="text-xs text-gray-500 font-mono bg-gray-100 inline-block px-2 py-0.5 rounded-md">{item.id}</p>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                          <h3 className="font-bold text-gray-900">{item.name}</h3>
+                          {isLowStock && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 uppercase tracking-wider">
+                              <AlertCircle size={10} /> ต่ำกว่าเกณฑ์
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tight">{item.id}</p>
+                          <span className="text-[10px] text-gray-400">•</span>
+                          <span className="text-[10px] text-gray-500 font-medium">เกณฑ์ขั้นต่ำ: {item.min}</span>
+                        </div>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center justify-between sm:justify-start gap-4 shrink-0 bg-gray-50 sm:bg-transparent p-3 sm:p-0 rounded-xl">
-                      <span className="text-sm font-bold text-gray-600 sm:hidden">จำนวนคงเหลือ:</span>
+                    <div className="flex items-center justify-between sm:justify-end gap-3 bg-gray-50 sm:bg-transparent px-3 py-2 sm:p-0 rounded-xl border border-gray-100 sm:border-0">
+                      <span className="text-xs font-bold text-gray-500 sm:hidden">จำนวนปัจจุบัน:</span>
                       <div className="flex items-center gap-1">
                         <button 
                           onClick={() => handleQuantityChange(item.id, item.current - 1)}
-                          className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
+                          className="w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
                         >
-                          <Minus size={18} />
+                          <Minus size={16} />
                         </button>
                         <input 
                           type="number" 
@@ -223,7 +244,7 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
                           value={item.current}
                           onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
                           className={cn(
-                            "w-16 text-center h-10 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all font-bold text-lg",
+                            "w-14 text-center h-9 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all font-bold text-sm",
                             isLowStock 
                               ? "border-red-300 focus:border-red-500 focus:ring-red-500/50 text-red-600" 
                               : "border-gray-200 focus:border-purple-500 focus:ring-purple-500/50 text-gray-900"
@@ -231,9 +252,9 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
                         />
                         <button 
                           onClick={() => handleQuantityChange(item.id, item.current + 1)}
-                          className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
+                          className="w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
                         >
-                          <Plus size={18} />
+                          <Plus size={16} />
                         </button>
                       </div>
                     </div>
@@ -245,15 +266,27 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pb-8">
         <button 
           onClick={handleSubmit}
           disabled={isLoading}
-          className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl transition-all shadow-xl shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
         >
           <Save size={20} /> บันทึกผลการตรวจเช็ค
         </button>
       </div>
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-green-500/20 backdrop-blur-sm">
+            <div className="bg-white/20 p-1 rounded-full">
+              <CheckCircle2 size={18} />
+            </div>
+            <span className="font-bold text-sm whitespace-nowrap">{successMessage}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

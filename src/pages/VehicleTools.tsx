@@ -15,6 +15,7 @@ export function VehicleTools({ user }: VehicleToolsProps) {
   const [search, setSearch] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'complete' | 'incomplete' | 'damaged'>('all');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -35,6 +36,13 @@ export function VehicleTools({ user }: VehicleToolsProps) {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -78,7 +86,9 @@ export function VehicleTools({ user }: VehicleToolsProps) {
     
     try {
       const response = await api.saveToolChecklist(tools, sender, receiver);
-      if (!response.success) {
+      if (response.success) {
+        setSuccessMessage('บันทึกข้อมูลเช็คลิสต์เครื่องมือสำเร็จแล้ว');
+      } else {
         alert(`เกิดข้อผิดพลาดในการบันทึกเครื่องมือ: ${response.message}`);
         loadData();
       }
@@ -185,52 +195,58 @@ export function VehicleTools({ user }: VehicleToolsProps) {
           ) : filteredAndSortedTools.length === 0 ? (
             <div className="p-8 text-center text-gray-500">ไม่พบข้อมูล</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-0 sm:gap-4 lg:gap-0 p-0 sm:p-4 lg:p-0">
+            <div className="grid grid-cols-1 gap-0">
               {filteredAndSortedTools.map((tool) => (
-                <div key={tool.id} className="p-4 sm:p-5 sm:bg-white sm:rounded-2xl sm:border sm:border-gray-100 lg:border-0 lg:border-b lg:rounded-none lg:bg-transparent flex flex-col sm:flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-gray-900 text-lg lg:text-base mb-1">{tool.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-0.5 rounded-md">{tool.id}</p>
-                      <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">จำนวน: {tool.qty}</span>
+                <div key={tool.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-0">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                      <Wrench size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 mb-0.5">{tool.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tight">{tool.id}</p>
+                        <span className="text-[10px] text-gray-400">•</span>
+                        <span className="text-[10px] text-purple-600 font-bold bg-purple-50 px-1.5 py-0.5 rounded">จำนวน: {tool.qty}</span>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-2 shrink-0 bg-gray-50 sm:bg-transparent p-2 sm:p-0 rounded-xl">
+                  <div className="grid grid-cols-3 gap-1.5 shrink-0 bg-gray-50 sm:bg-transparent p-1.5 sm:p-0 rounded-xl border border-gray-100 sm:border-0">
                     <button
                       onClick={() => handleStatusChange(tool.id, 'complete')}
                       className={cn(
-                        "flex flex-col sm:flex-row items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 rounded-xl sm:rounded-lg text-xs sm:text-sm font-bold transition-all border",
+                        "flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-lg text-[10px] font-bold transition-all border",
                         tool.status === 'complete' 
-                          ? "bg-emerald-500 border-emerald-600 text-white shadow-md shadow-emerald-500/20" 
-                          : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
+                          ? "bg-emerald-500 border-emerald-600 text-white shadow-sm" 
+                          : "bg-white border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                     >
-                      <CheckCircle2 size={18} className={cn(tool.status === 'complete' ? "text-white" : "text-gray-400")} /> 
+                      <CheckCircle2 size={16} /> 
                       <span>ครบ</span>
                     </button>
                     <button
                       onClick={() => handleStatusChange(tool.id, 'incomplete')}
                       className={cn(
-                        "flex flex-col sm:flex-row items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 rounded-xl sm:rounded-lg text-xs sm:text-sm font-bold transition-all border",
+                        "flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-lg text-[10px] font-bold transition-all border",
                         tool.status === 'incomplete' 
-                          ? "bg-orange-500 border-orange-600 text-white shadow-md shadow-orange-500/20" 
-                          : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
+                          ? "bg-orange-500 border-orange-600 text-white shadow-sm" 
+                          : "bg-white border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                     >
-                      <XCircle size={18} className={cn(tool.status === 'incomplete' ? "text-white" : "text-gray-400")} /> 
+                      <XCircle size={16} /> 
                       <span>ไม่ครบ</span>
                     </button>
                     <button
                       onClick={() => handleStatusChange(tool.id, 'damaged')}
                       className={cn(
-                        "flex flex-col sm:flex-row items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 rounded-xl sm:rounded-lg text-xs sm:text-sm font-bold transition-all border",
+                        "flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-lg text-[10px] font-bold transition-all border",
                         tool.status === 'damaged' 
-                          ? "bg-red-500 border-red-600 text-white shadow-md shadow-red-500/20" 
-                          : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
+                          ? "bg-red-500 border-red-600 text-white shadow-sm" 
+                          : "bg-white border-gray-200 text-gray-400 hover:bg-gray-50"
                       )}
                     >
-                      <AlertCircle size={18} className={cn(tool.status === 'damaged' ? "text-white" : "text-gray-400")} /> 
+                      <AlertCircle size={16} /> 
                       <span>ชำรุด</span>
                     </button>
                   </div>
@@ -241,15 +257,27 @@ export function VehicleTools({ user }: VehicleToolsProps) {
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pb-8">
         <button 
           onClick={handleSubmit}
           disabled={isLoading}
-          className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl transition-all shadow-xl shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
         >
           <Save size={20} /> บันทึกผลการตรวจเช็ค
         </button>
       </div>
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-green-500/20 backdrop-blur-sm">
+            <div className="bg-white/20 p-1 rounded-full">
+              <CheckCircle2 size={18} />
+            </div>
+            <span className="font-bold text-sm whitespace-nowrap">{successMessage}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

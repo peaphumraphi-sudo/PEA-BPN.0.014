@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Minus, AlertCircle, QrCode, X, ArrowUpDown, Filter, Printer } from 'lucide-react';
+import { Search, Plus, Minus, AlertCircle, QrCode, X, ArrowUpDown, Filter, Printer, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/api';
 import { cn } from '../utils/cn';
 import { QRScanner } from '../components/QRScanner';
@@ -21,6 +21,7 @@ export function MainInventory({ user }: MainInventoryProps) {
   const [qrViewItem, setQrViewItem] = useState<any>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'normal' | 'low'>('all');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const isAdmin = user?.role === 'admin';
 
@@ -43,6 +44,14 @@ export function MainInventory({ user }: MainInventoryProps) {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -100,6 +109,8 @@ export function MainInventory({ user }: MainInventoryProps) {
         // Revert on failure
         setItems(originalItems);
         alert(`เกิดข้อผิดพลาด: ${response.message}`);
+      } else {
+        setSuccessMessage(`${transactionType === 'in' ? 'รับเข้า' : 'เบิกออก'} ${selectedItem.name} จำนวน ${quantity} ชิ้น สำเร็จแล้ว`);
       }
     } catch (error) {
       console.error(error);
@@ -356,6 +367,18 @@ export function MainInventory({ user }: MainInventoryProps) {
             >
               <Printer size={20} /> พิมพ์รหัสนี้
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-green-500/20 backdrop-blur-sm">
+            <div className="bg-white/20 p-1 rounded-full">
+              <CheckCircle2 size={18} />
+            </div>
+            <span className="font-bold text-sm whitespace-nowrap">{successMessage}</span>
           </div>
         </div>
       )}
