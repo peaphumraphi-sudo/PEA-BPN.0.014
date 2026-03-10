@@ -342,3 +342,8 @@ function deleteUser(username) {
   }
   return { success: true };
 }
+// เพิ่มฟังก์ชันนี้เพื่อให้รองรับการเปิด URL ผ่าน Browser หรือการดึงข้อมูลแบบ GET
+function doGet(e) {
+  return ContentService.createTextOutput("Service is running. Please use POST for data operations.")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
