@@ -42,10 +42,31 @@ export const api = {
     }
   },
 
+  async fetchFromGoogleSheets() {
+    if (!GAS_URL) return { success: false, message: 'ไม่ได้กำหนด URL ของ Google Apps Script' };
+    try {
+      const response = await fetch(`${GAS_URL}?action=getData`);
+      // Note: GAS Web Apps handle CORS but fetch might need to handle redirects
+      // If the GAS script is set up for GET, this will work.
+      const data = await response.json();
+      return { success: true, items: data };
+    } catch (error) {
+      console.error('Google Sheets Fetch Error:', error);
+      return { success: false, message: 'ไม่สามารถดึงข้อมูลจาก Google Sheets ได้' };
+    }
+  },
+
   async request(action: string, payload: any = {}) {
     try {
       if (!isFirebaseConfigured()) {
-        console.warn('Firebase not configured, using mock data');
+        console.warn('Firebase not configured, using mock data or Google Sheets');
+        
+        // Try fetching from Google Sheets for inventory if Firebase is down
+        if (action === 'getMainInventory') {
+          const sheetsData = await this.fetchFromGoogleSheets();
+          if (sheetsData.success) return sheetsData;
+        }
+        
         const mockResult = this.getMockData(action, payload);
         // If it's a mutation, we might still want to try syncing to sheets if URL exists
         if (['transaction', 'withdrawToVehicle', 'saveVehicleChecklist', 'saveToolChecklist', 'addUser', 'updateUser', 'deleteUser'].includes(action)) {

@@ -23,6 +23,7 @@ export function MainInventory({ user }: MainInventoryProps) {
   const [filterStatus, setFilterStatus] = useState<'all' | 'normal' | 'low'>('all');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const isAdmin = user?.role === 'admin';
 
@@ -141,6 +142,25 @@ export function MainInventory({ user }: MainInventoryProps) {
     }
   };
 
+  const handleSyncFromSheets = async () => {
+    setIsSyncing(true);
+    setSuccessMessage('กำลังดึงข้อมูลจาก Google Sheets...');
+    try {
+      const response = await api.fetchFromGoogleSheets();
+      if (response.success && response.items) {
+        setItems(response.items);
+        setSuccessMessage('ดึงข้อมูลจาก Google Sheets สำเร็จ');
+      } else {
+        setSuccessMessage(`ผิดพลาด: ${response.message}`);
+      }
+    } catch (error) {
+      console.error(error);
+      setSuccessMessage('เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -178,8 +198,18 @@ export function MainInventory({ user }: MainInventoryProps) {
             <button 
               onClick={() => setIsScannerOpen(true)}
               className="p-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors shadow-md shadow-purple-500/20 shrink-0"
+              title="สแกน QR Code"
             >
               <QrCode size={20} />
+            </button>
+
+            <button 
+              onClick={handleSyncFromSheets}
+              disabled={isSyncing}
+              className="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-500/20 shrink-0 disabled:opacity-50"
+              title="ดึงข้อมูลจาก Google Sheets"
+            >
+              <RefreshCw size={20} className={cn(isSyncing && "animate-spin")} />
             </button>
           </div>
         </div>

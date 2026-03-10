@@ -344,6 +344,14 @@ function deleteUser(username) {
 }
 // เพิ่มฟังก์ชันนี้เพื่อให้รองรับการเปิด URL ผ่าน Browser หรือการดึงข้อมูลแบบ GET
 function doGet(e) {
-  return ContentService.createTextOutput("Service is running. Please use POST for data operations.")
+  const action = e.parameter.action;
+  
+  if (action === 'getData') {
+    const result = getMainInventory();
+    return ContentService.createTextOutput(JSON.stringify(result.items))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  return ContentService.createTextOutput("Service is running. Please use POST for data operations or ?action=getData to fetch inventory.")
     .setMimeType(ContentService.MimeType.TEXT);
 }

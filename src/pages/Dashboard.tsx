@@ -58,6 +58,25 @@ export function Dashboard() {
     ];
   }, [data]);
 
+  const handleSyncFromSheets = async () => {
+    setIsLoading(true);
+    try {
+      const response = await api.fetchFromGoogleSheets();
+      if (response.success) {
+        // After syncing, we should probably refresh the dashboard data
+        // to reflect the new counts.
+        await loadData();
+      } else {
+        alert(`ผิดพลาด: ${response.message}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -70,12 +89,23 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">แดชบอร์ดสรุปผล</h1>
-        <button 
-          onClick={loadData}
-          className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-purple-600 hover:border-purple-200 transition-colors shadow-sm"
-        >
-          <RefreshCw size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleSyncFromSheets}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm text-sm font-medium"
+            title="ดึงข้อมูลจาก Google Sheets"
+          >
+            <RefreshCw size={18} />
+            <span>ซิงค์ข้อมูล</span>
+          </button>
+          <button 
+            onClick={loadData}
+            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-purple-600 hover:border-purple-200 transition-colors shadow-sm"
+            title="รีเฟรช"
+          >
+            <RefreshCw size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}
