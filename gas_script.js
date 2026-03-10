@@ -1,7 +1,6 @@
 // Google Apps Script for PEA BPN Inventory
-// Spreadsheet ID: 1OeQxH-Ck_RkwD83CwNyxtPtChqwrLXkZlOSyOVJKpB8
-
-const SPREADSHEET_ID = '1OeQxH-Ck_RkwD83CwNyxtPtChqwrLXkZlOSyOVJKpB8';
+// Spreadsheet ID: ใส่ ID ของ Google Sheet ของคุณที่นี่
+const SPREADSHEET_ID = '1OeQxH-Ck_RkwD83CwNyxtPtChqwrLXkZlOSyOVJKpB8'; // <--- เปลี่ยนเป็น ID ของคุณ
 
 function doPost(e) {
   try {
@@ -36,6 +35,16 @@ function doPost(e) {
         break;
       case 'getDashboardData':
         result = getDashboardData();
+        break;
+      case 'getUsers':
+        result = getUsers();
+        break;
+      case 'addUser':
+      case 'updateUser':
+        result = saveUser(data.user);
+        break;
+      case 'deleteUser':
+        result = deleteUser(data.username);
         break;
       default:
         result = { success: false, message: 'Invalid action' };
@@ -286,4 +295,50 @@ function getDashboardData() {
     lowStockItems: lowStockItems,
     recentTransactions: recentTransactions
   };
+}
+
+function getUsers() {
+  const sheet = getSheet('Users');
+  const data = sheet.getDataRange().getValues();
+  const users = [];
+  for (let i = 1; i < data.length; i++) {
+    users.push({
+      username: data[i][0],
+      pin: data[i][1],
+      role: data[i][2],
+      name: data[i][3]
+    });
+  }
+  return { success: true, users: users };
+}
+
+function saveUser(user) {
+  const sheet = getSheet('Users');
+  const data = sheet.getDataRange().getValues();
+  let found = false;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] == user.username) {
+      sheet.getRange(i + 1, 2).setValue(user.pin);
+      sheet.getRange(i + 1, 3).setValue(user.role);
+      sheet.getRange(i + 1, 4).setValue(user.name);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    sheet.appendRow([user.username, user.pin, user.role, user.name]);
+  }
+  return { success: true };
+}
+
+function deleteUser(username) {
+  const sheet = getSheet('Users');
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] == username) {
+      sheet.deleteRow(i + 1);
+      break;
+    }
+  }
+  return { success: true };
 }

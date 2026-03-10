@@ -21,13 +21,40 @@ const isFirebaseConfigured = () => {
   return isFirebaseEnabled;
 };
 
+const GAS_URL = import.meta.env.VITE_GAS_WEBAPP_URL;
+
 export const api = {
+  async syncToGoogleSheets(action: string, payload: any) {
+    if (!GAS_URL) return;
+    try {
+      // Use no-cors or handle CORS in GAS (GAS handles it by default if using ContentService)
+      // But fetch to GAS usually needs to follow redirects
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors', // GAS Web Apps often require no-cors for simple POSTs from browser
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action, ...payload }),
+      });
+    } catch (error) {
+      console.error('Google Sheets Sync Error:', error);
+    }
+  },
+
   async request(action: string, payload: any = {}) {
     try {
       if (!isFirebaseConfigured()) {
         console.warn('Firebase not configured, using mock data');
-        return this.getMockData(action, payload);
+        const mockResult = this.getMockData(action, payload);
+        // If it's a mutation, we might still want to try syncing to sheets if URL exists
+        if (['transaction', 'withdrawToVehicle', 'saveVehicleChecklist', 'saveToolChecklist', 'addUser', 'updateUser', 'deleteUser'].includes(action)) {
+          this.syncToGoogleSheets(action, payload);
+        }
+        return mockResult;
       }
+
+      let result: any = { success: false };
 
       switch (action) {
         case 'login': {
@@ -35,27 +62,32 @@ export const api = {
           const querySnapshot = await getDocs(q);
           if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
-            return { success: true, user: { username: userData.username, role: userData.role, name: userData.name } };
+            result = { success: true, user: { username: userData.username, role: userData.role, name: userData.name } };
+          } else {
+            result = { success: false, message: 'ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง' };
           }
-          return { success: false, message: 'ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง' };
+          break;
         }
 
         case 'getMainInventory': {
           const querySnapshot = await getDocs(collection(db, "mainInventory"));
           const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          return { success: true, items };
+          result = { success: true, items };
+          break;
         }
 
         case 'getVehicleInventory': {
           const querySnapshot = await getDocs(collection(db, "vehicleInventory"));
           const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          return { success: true, items };
+          result = { success: true, items };
+          break;
         }
 
         case 'getVehicleTools': {
           const querySnapshot = await getDocs(collection(db, "vehicleTools"));
           const tools = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          return { success: true, tools };
+          result = { success: true, tools };
+          break;
         }
 
         case 'transaction': {
@@ -64,27 +96,27 @@ export const api = {
           const itemSnap = await getDoc(itemRef);
           
           if (!itemSnap.exists()) {
-            return { success: false, message: 'ไม่พบพัสดุในระบบ' };
+            result = { success: false, message: 'ไม่พบพัสดุในระบบ' };
+          } else {
+            const currentQty = itemSnap.data().current || 0;
+            const newQty = type === 'in' ? currentQty + quantity : currentQty - quantity;
+
+            if (newQty < 0) {
+              result = { success: false, message: 'จำนวนพัสดุในคลังไม่เพียงพอ' };
+            } else {
+              await updateDoc(itemRef, { current: newQty });
+              await addDoc(collection(db, "transactions"), {
+                date: Timestamp.now(),
+                type,
+                item: itemCode,
+                qty: quantity,
+                user,
+                source: 'main'
+              });
+              result = { success: true };
+            }
           }
-
-          const currentQty = itemSnap.data().current || 0;
-          const newQty = type === 'in' ? currentQty + quantity : currentQty - quantity;
-
-          if (newQty < 0) {
-            return { success: false, message: 'จำนวนพัสดุในคลังไม่เพียงพอ' };
-          }
-
-          await updateDoc(itemRef, { current: newQty });
-          await addDoc(collection(db, "transactions"), {
-            date: Timestamp.now(),
-            type,
-            item: itemCode,
-            qty: quantity,
-            user,
-            source: 'main'
-          });
-
-          return { success: true };
+          break;
         }
 
         case 'withdrawToVehicle': {
@@ -93,38 +125,43 @@ export const api = {
           // 1. Update Main Inventory
           const mainRef = doc(db, "mainInventory", itemCode);
           const mainSnap = await getDoc(mainRef);
-          if (!mainSnap.exists()) return { success: false, message: 'ไม่พบพัสดุในคลังหลัก' };
-          
-          const mainQty = mainSnap.data().current || 0;
-          if (mainQty < quantity) return { success: false, message: 'จำนวนพัสดุในคลังหลักไม่เพียงพอ' };
-          
-          await updateDoc(mainRef, { current: mainQty - quantity });
-
-          // 2. Update Vehicle Inventory
-          const vehicleRef = doc(db, "vehicleInventory", itemCode);
-          const vehicleSnap = await getDoc(vehicleRef);
-          
-          if (vehicleSnap.exists()) {
-            await updateDoc(vehicleRef, { current: increment(quantity) });
+          if (!mainSnap.exists()) {
+            result = { success: false, message: 'ไม่พบพัสดุในคลังหลัก' };
           } else {
-            await setDoc(vehicleRef, { 
-              name: mainSnap.data().name, 
-              current: quantity, 
-              min: mainSnap.data().min || 0 
-            });
+            const mainQty = mainSnap.data().current || 0;
+            if (mainQty < quantity) {
+              result = { success: false, message: 'จำนวนพัสดุในคลังหลักไม่เพียงพอ' };
+            } else {
+              await updateDoc(mainRef, { current: mainQty - quantity });
+
+              // 2. Update Vehicle Inventory
+              const vehicleRef = doc(db, "vehicleInventory", itemCode);
+              const vehicleSnap = await getDoc(vehicleRef);
+              
+              if (vehicleSnap.exists()) {
+                await updateDoc(vehicleRef, { current: increment(quantity) });
+              } else {
+                await setDoc(vehicleRef, { 
+                  name: mainSnap.data().name, 
+                  current: quantity, 
+                  min: mainSnap.data().min || 0 
+                });
+              }
+
+              // 3. Log Transaction
+              await addDoc(collection(db, "transactions"), {
+                date: Timestamp.now(),
+                type: 'out',
+                item: itemCode,
+                qty: quantity,
+                user,
+                source: 'withdraw_to_vehicle'
+              });
+
+              result = { success: true };
+            }
           }
-
-          // 3. Log Transaction
-          await addDoc(collection(db, "transactions"), {
-            date: Timestamp.now(),
-            type: 'out',
-            item: itemCode,
-            qty: quantity,
-            user,
-            source: 'withdraw_to_vehicle'
-          });
-
-          return { success: true };
+          break;
         }
 
         case 'saveVehicleChecklist': {
@@ -132,7 +169,8 @@ export const api = {
             ...payload,
             date: Timestamp.now()
           });
-          return { success: true };
+          result = { success: true };
+          break;
         }
 
         case 'saveToolChecklist': {
@@ -140,7 +178,8 @@ export const api = {
             ...payload,
             date: Timestamp.now()
           });
-          return { success: true };
+          result = { success: true };
+          break;
         }
 
         case 'getDashboardData': {
@@ -158,39 +197,51 @@ export const api = {
             };
           });
 
-          return {
+          result = {
             success: true,
             totalItems: items.length,
             lowStockItems: lowStockItemsList.length,
             lowStockItemsList,
             recentTransactions
           };
+          break;
         }
 
         case 'getUsers': {
           const querySnapshot = await getDocs(collection(db, "users"));
           const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          return { success: true, users };
+          result = { success: true, users };
+          break;
         }
 
         case 'addUser': {
           await setDoc(doc(db, "users", payload.user.username), payload.user);
-          return { success: true };
+          result = { success: true };
+          break;
         }
 
         case 'updateUser': {
           await updateDoc(doc(db, "users", payload.user.username), payload.user);
-          return { success: true };
+          result = { success: true };
+          break;
         }
 
         case 'deleteUser': {
           await deleteDoc(doc(db, "users", payload.username));
-          return { success: true };
+          result = { success: true };
+          break;
         }
 
         default:
-          return this.getMockData(action, payload);
+          result = this.getMockData(action, payload);
       }
+
+      // Sync to Google Sheets if it's a mutation and successful
+      if (result.success && ['transaction', 'withdrawToVehicle', 'saveVehicleChecklist', 'saveToolChecklist', 'addUser', 'updateUser', 'deleteUser'].includes(action)) {
+        this.syncToGoogleSheets(action, payload);
+      }
+
+      return result;
     } catch (error) {
       console.error('Firestore Error:', error);
       return this.getMockData(action, payload);
