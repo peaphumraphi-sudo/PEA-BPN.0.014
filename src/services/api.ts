@@ -98,58 +98,136 @@ export const api = {
       const actions = ['getMainInventory', 'getVehicleInventory', 'getVehicleTools', 'getUsers'];
       const results = await Promise.all(actions.map(action => this.fetchFromGoogleSheets(action)));
       
-      for (let i = 0; i < actions.length; i++) {
-        const action = actions[i];
-        const result = results[i];
+      const mainResult = results[0];
+      const vehicleResult = results[1];
+      const toolsResult = results[2];
+      const usersResult = results[3];
+
+      // 1. Sync Main Inventory
+      if (mainResult && mainResult.success && Array.isArray(mainResult.items)) {
+        const sheetItems = mainResult.items;
+        const sheetIds = sheetItems.map((item: any) => String(item.id).trim()).filter(Boolean);
         
-        console.log(`Processing result for ${action}:`, result?.success ? 'Success' : 'Failed');
+        // Delete items not in sheet
+        const currentSnap = await getDocs(collection(db, "mainInventory"));
+        for (const docSnap of currentSnap.docs) {
+          if (!sheetIds.includes(docSnap.id)) {
+            await deleteDoc(doc(db, "mainInventory", docSnap.id));
+            // Also delete from vehicle inventory as requested
+            await deleteDoc(doc(db, "vehicleInventory", docSnap.id));
+          }
+        }
+
+        // Update/Add items from sheet
+        for (const item of sheetItems) {
+          if (item && item.id) {
+            const id = String(item.id).trim();
+            if (id) {
+              await setDoc(doc(db, "mainInventory", id), item);
+            }
+          }
+        }
+      }
+
+      // 2. Sync Vehicle Inventory
+      if (vehicleResult && vehicleResult.success && Array.isArray(vehicleResult.items)) {
+        const sheetItems = vehicleResult.items;
+        const sheetIds = sheetItems.map((item: any) => String(item.id).trim()).filter(Boolean);
         
-        if (result && result.success) {
-          if (action === 'getMainInventory' && Array.isArray(result.items)) {
-            console.log(`Syncing ${result.items.length} items to mainInventory`);
-            for (const item of result.items) {
-              if (item && item.id) {
-                const id = String(item.id).trim();
-                if (id) {
-                  await setDoc(doc(db, "mainInventory", id), item);
-                }
-              }
+        // Get main inventory IDs to ensure we don't delete items that should be in both
+        const mainIds = mainResult?.success ? mainResult.items.map((i: any) => String(i.id).trim()) : [];
+
+        // Delete items not in vehicle sheet AND not in main sheet
+        const currentSnap = await getDocs(collection(db, "vehicleInventory"));
+        for (const docSnap of currentSnap.docs) {
+          if (!sheetIds.includes(docSnap.id) && !mainIds.includes(docSnap.id)) {
+            await deleteDoc(doc(db, "vehicleInventory", docSnap.id));
+          }
+        }
+
+        // Update/Add items from vehicle sheet
+        for (const item of sheetItems) {
+          if (item && item.id) {
+            const id = String(item.id).trim();
+            if (id) {
+              await setDoc(doc(db, "vehicleInventory", id), item);
             }
-          } else if (action === 'getVehicleInventory' && Array.isArray(result.items)) {
-            console.log(`Syncing ${result.items.length} items to vehicleInventory`);
-            for (const item of result.items) {
-              if (item && item.id) {
-                const id = String(item.id).trim();
-                if (id) {
-                  await setDoc(doc(db, "vehicleInventory", id), item);
-                }
-              }
-            }
-          } else if (action === 'getVehicleTools' && Array.isArray(result.tools)) {
-            console.log(`Syncing ${result.tools.length} tools to vehicleTools`);
-            for (const tool of result.tools) {
-              if (tool && tool.id) {
-                const id = String(tool.id).trim();
-                if (id) {
-                  await setDoc(doc(db, "vehicleTools", id), tool);
-                }
-              }
-            }
-          } else if (action === 'getUsers' && Array.isArray(result.users)) {
-            console.log(`Syncing ${result.users.length} users to users`);
-            for (const user of result.users) {
-              if (user && user.username) {
-                const username = String(user.username).trim();
-                if (username) {
-                  await setDoc(doc(db, "users", username), user);
-                }
+          }
+        }
+
+        // Ensure all main inventory items exist in vehicle inventory and are up to date
+        if (mainResult?.success) {
+          for (const mainItem of mainResult.items) {
+            const id = String(mainItem.id).trim();
+            if (id) {
+              const vRef = doc(db, "vehicleInventory", id);
+              const vSnap = await getDoc(vRef);
+              
+              if (!vSnap.exists()) {
+                // Add new item to vehicle inventory
+                await setDoc(vRef, {
+                  name: mainItem.name,
+                  min: mainItem.min || 0,
+                  current: 0
+                });
+              } else {
+                // Update existing item metadata from main inventory if not explicitly in vehicle sheet
+                // or just to keep name/min in sync
+                const vData = vSnap.data();
+                await updateDoc(vRef, {
+                  name: mainItem.name,
+                  min: mainItem.min || 0
+                });
               }
             }
           }
-        } else {
-          console.warn(`Sync failed for ${action}:`, result?.message || 'Unknown error');
         }
       }
+
+      // 3. Sync Vehicle Tools
+      if (toolsResult && toolsResult.success && Array.isArray(toolsResult.tools)) {
+        const sheetTools = toolsResult.tools;
+        const sheetIds = sheetTools.map((t: any) => String(t.id).trim()).filter(Boolean);
+        
+        const currentSnap = await getDocs(collection(db, "vehicleTools"));
+        for (const docSnap of currentSnap.docs) {
+          if (!sheetIds.includes(docSnap.id)) {
+            await deleteDoc(doc(db, "vehicleTools", docSnap.id));
+          }
+        }
+
+        for (const tool of sheetTools) {
+          if (tool && tool.id) {
+            const id = String(tool.id).trim();
+            if (id) {
+              await setDoc(doc(db, "vehicleTools", id), tool);
+            }
+          }
+        }
+      }
+
+      // 4. Sync Users
+      if (usersResult && usersResult.success && Array.isArray(usersResult.users)) {
+        const sheetUsers = usersResult.users;
+        const sheetUsernames = sheetUsers.map((u: any) => String(u.username).trim()).filter(Boolean);
+        
+        const currentSnap = await getDocs(collection(db, "users"));
+        for (const docSnap of currentSnap.docs) {
+          if (!sheetUsernames.includes(docSnap.id)) {
+            await deleteDoc(doc(db, "users", docSnap.id));
+          }
+        }
+
+        for (const user of sheetUsers) {
+          if (user && user.username) {
+            const username = String(user.username).trim();
+            if (username) {
+              await setDoc(doc(db, "users", username), user);
+            }
+          }
+        }
+      }
+
       console.log('Sync All From Sheets Completed Successfully');
       return { success: true, message: 'ซิงค์ข้อมูลจาก Google Sheets สำเร็จ' };
     } catch (error) {

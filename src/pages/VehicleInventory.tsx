@@ -17,6 +17,7 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'normal' | 'low'>('all');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadData = async () => {
@@ -84,6 +85,25 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
       return 0;
     });
 
+  const handleSyncFromSheets = async () => {
+    setIsSyncing(true);
+    setSuccessMessage('กำลังซิงค์ข้อมูลจาก Google Sheets...');
+    try {
+      const response = await api.syncAllFromSheets();
+      if (response.success) {
+        await loadData();
+        setSuccessMessage('ซิงค์ข้อมูลจาก Google Sheets สำเร็จ');
+      } else {
+        setSuccessMessage(`ผิดพลาด: ${response.message}`);
+      }
+    } catch (error) {
+      console.error(error);
+      setSuccessMessage('เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleQuantityChange = (id: string, value: number) => {
     setItems(prev => prev.map(item => 
       item.id === id ? { ...item, current: Math.max(0, value) } : item
@@ -128,6 +148,14 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
             <p className="text-sm text-gray-500 mt-1">เช็คลิสต์วัสดุอุปกรณ์ประจำรถ</p>
           </div>
         </div>
+        <button 
+          onClick={handleSyncFromSheets}
+          disabled={isSyncing}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-500/20 disabled:opacity-50 text-sm font-bold"
+        >
+          <RefreshCw size={18} className={cn(isSyncing && "animate-spin")} />
+          {isSyncing ? 'กำลังซิงค์...' : 'ซิงค์ข้อมูล'}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
