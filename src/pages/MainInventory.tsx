@@ -65,8 +65,12 @@ export function MainInventory({ user }: MainInventoryProps) {
 
   const filteredAndSortedItems = [...items]
     .filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase()) || 
-                            item.id.toLowerCase().includes(search.toLowerCase());
+      const searchLower = (search || '').toLowerCase();
+      const itemNameLower = (item.name || '').toLowerCase();
+      const itemIdLower = (item.id || '').toLowerCase();
+      
+      const matchesSearch = itemNameLower.includes(searchLower) || 
+                            itemIdLower.includes(searchLower);
       
       if (filterStatus === 'all') return matchesSearch;
       const isLowStock = item.current <= item.min;

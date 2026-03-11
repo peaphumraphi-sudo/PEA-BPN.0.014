@@ -27,10 +27,12 @@ export function QRGenerator() {
     loadData();
   }, []);
 
-  const filteredItems = items.filter(item => 
-    item.name.toLowerCase().includes(search.toLowerCase()) || 
-    item.id.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredItems = items.filter(item => {
+    const searchLower = (search || '').toLowerCase();
+    const itemNameLower = (item.name || '').toLowerCase();
+    const itemIdLower = (item.id || '').toLowerCase();
+    return itemNameLower.includes(searchLower) || itemIdLower.includes(searchLower);
+  });
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => 

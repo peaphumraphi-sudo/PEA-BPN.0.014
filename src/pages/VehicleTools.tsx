@@ -62,8 +62,12 @@ export function VehicleTools({ user }: VehicleToolsProps) {
 
   const filteredAndSortedTools = [...tools]
     .filter(tool => {
-      const matchesSearch = tool.name.toLowerCase().includes(search.toLowerCase()) || 
-                            tool.id.toLowerCase().includes(search.toLowerCase());
+      const searchLower = (search || '').toLowerCase();
+      const toolNameLower = (tool.name || '').toLowerCase();
+      const toolIdLower = (tool.id || '').toLowerCase();
+      
+      const matchesSearch = toolNameLower.includes(searchLower) || 
+                            toolIdLower.includes(searchLower);
       
       if (filterStatus === 'all') return matchesSearch;
       return matchesSearch && tool.status === filterStatus;
