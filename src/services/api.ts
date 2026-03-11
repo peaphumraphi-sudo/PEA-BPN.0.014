@@ -42,17 +42,80 @@ export const api = {
     }
   },
 
-  async fetchFromGoogleSheets() {
+  async fetchFromGoogleSheets(action: string = 'getMainInventory') {
     if (!GAS_URL) return { success: false, message: 'ไม่ได้กำหนด URL ของ Google Apps Script' };
     try {
-      const response = await fetch(`${GAS_URL}?action=getData`);
-      // Note: GAS Web Apps handle CORS but fetch might need to handle redirects
-      // If the GAS script is set up for GET, this will work.
-      const data = await response.json();
-      return { success: true, items: data };
+      // Try GET first (faster, usually works for data fetching)
+      let response = await fetch(`${GAS_URL}?action=${action}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      let text = await response.text();
+      
+      // If GET returns the "Service is running" message, it means doGet is not configured for data
+      // but doPost might be. Let's try POST.
+      if (text.includes('Service is running')) {
+        console.log('GET returned service message, trying POST...');
+        const postResponse = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action })
+        });
+        
+        if (postResponse.ok) {
+          text = await postResponse.text();
+        }
+      }
+
+      try {
+        const data = JSON.parse(text);
+        // GAS returns the result object directly if using the new doGet/doPost
+        return data.success !== undefined ? data : { success: true, items: data };
+      } catch (parseError) {
+        console.error('Google Sheets Parse Error:', parseError, 'Response text:', text.substring(0, 100));
+        return { success: false, message: 'ข้อมูลที่ได้รับจาก Google Sheets ไม่ถูกต้อง' };
+      }
     } catch (error) {
       console.error('Google Sheets Fetch Error:', error);
-      return { success: false, message: 'ไม่สามารถดึงข้อมูลจาก Google Sheets ได้' };
+      return { success: false, message: 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้' };
+    }
+  },
+
+  async syncAllFromSheets() {
+    if (!GAS_URL) return { success: false, message: 'ไม่ได้กำหนด URL ของ Google Apps Script' };
+    try {
+      const actions = ['getMainInventory', 'getVehicleInventory', 'getVehicleTools', 'getUsers'];
+      const results = await Promise.all(actions.map(action => this.fetchFromGoogleSheets(action)));
+      
+      for (let i = 0; i < actions.length; i++) {
+        const action = actions[i];
+        const result = results[i];
+        
+        if (result.success) {
+          if (action === 'getMainInventory') {
+            for (const item of result.items) {
+              await setDoc(doc(db, "mainInventory", item.id), item);
+            }
+          } else if (action === 'getVehicleInventory') {
+            for (const item of result.items) {
+              await setDoc(doc(db, "vehicleInventory", item.id), item);
+            }
+          } else if (action === 'getVehicleTools') {
+            for (const tool of result.tools) {
+              await setDoc(doc(db, "vehicleTools", tool.id), tool);
+            }
+          } else if (action === 'getUsers') {
+            for (const user of result.users) {
+              await setDoc(doc(db, "users", user.username), user);
+            }
+          }
+        }
+      }
+      return { success: true, message: 'ซิงค์ข้อมูลจาก Google Sheets สำเร็จ' };
+    } catch (error) {
+      console.error('Sync All From Sheets Error:', error);
+      return { success: false, message: 'เกิดข้อผิดพลาดในการซิงค์ข้อมูล' };
     }
   },
 
@@ -61,9 +124,9 @@ export const api = {
       if (!isFirebaseConfigured()) {
         console.warn('Firebase not configured, using mock data or Google Sheets');
         
-        // Try fetching from Google Sheets for inventory if Firebase is down
-        if (action === 'getMainInventory') {
-          const sheetsData = await this.fetchFromGoogleSheets();
+        // Try fetching from Google Sheets for data if Firebase is down
+        if (['getMainInventory', 'getVehicleInventory', 'getDashboardData', 'getUsers', 'getVehicleTools'].includes(action)) {
+          const sheetsData = await this.fetchFromGoogleSheets(action);
           if (sheetsData.success) return sheetsData;
         }
         
@@ -85,7 +148,37 @@ export const api = {
             const userData = querySnapshot.docs[0].data();
             result = { success: true, user: { username: userData.username, role: userData.role, name: userData.name } };
           } else {
-            result = { success: false, message: 'ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง' };
+            // Fallback to Google Sheets for login if Firebase is empty/new
+            const sheetsUsers = await this.fetchFromGoogleSheets('getUsers');
+            let userFound = false;
+
+            if (sheetsUsers.success && sheetsUsers.users) {
+              const user = sheetsUsers.users.find((u: any) => u.username === payload.username && u.pin === payload.pin);
+              if (user) {
+                // Auto-populate Firebase with this user
+                try {
+                  await setDoc(doc(db, "users", user.username), user);
+                } catch (e) {
+                  console.error('Failed to auto-populate user to Firestore:', e);
+                }
+                result = { success: true, user: { username: user.username, role: user.role, name: user.name } };
+                userFound = true;
+              }
+            }
+
+            // Final fallback to mock users if not found in Firestore or Sheets
+            // This ensures the user can always log in with default credentials (admin/1234)
+            if (!userFound) {
+              const mockData = this.getMockData('getUsers', {});
+              const mockUsers = mockData.users || [];
+              const mockUser = mockUsers.find((u: any) => u.username === payload.username && u.pin === payload.pin);
+              
+              if (mockUser) {
+                result = { success: true, user: { username: mockUser.username, role: mockUser.role, name: mockUser.name } };
+              } else {
+                result = { success: false, message: 'ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง' };
+              }
+            }
           }
           break;
         }

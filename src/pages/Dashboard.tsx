@@ -61,10 +61,9 @@ export function Dashboard() {
   const handleSyncFromSheets = async () => {
     setIsLoading(true);
     try {
-      const response = await api.fetchFromGoogleSheets();
+      const response = await api.syncAllFromSheets();
       if (response.success) {
-        // After syncing, we should probably refresh the dashboard data
-        // to reflect the new counts.
+        alert('ซิงค์ข้อมูลจาก Google Sheets สำเร็จ');
         await loadData();
       } else {
         alert(`ผิดพลาด: ${response.message}`);

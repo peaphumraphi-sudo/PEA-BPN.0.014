@@ -144,12 +144,12 @@ export function MainInventory({ user }: MainInventoryProps) {
 
   const handleSyncFromSheets = async () => {
     setIsSyncing(true);
-    setSuccessMessage('กำลังดึงข้อมูลจาก Google Sheets...');
+    setSuccessMessage('กำลังซิงค์ข้อมูลจาก Google Sheets...');
     try {
-      const response = await api.fetchFromGoogleSheets();
-      if (response.success && response.items) {
-        setItems(response.items);
-        setSuccessMessage('ดึงข้อมูลจาก Google Sheets สำเร็จ');
+      const response = await api.syncAllFromSheets();
+      if (response.success) {
+        await loadData();
+        setSuccessMessage('ซิงค์ข้อมูลจาก Google Sheets สำเร็จ');
       } else {
         setSuccessMessage(`ผิดพลาด: ${response.message}`);
       }

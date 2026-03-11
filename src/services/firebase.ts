@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDnL4rtmMx4YFR67sQNVt3Dfbcjw3B7B7Y",
@@ -14,4 +14,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const isFirebaseEnabled = !!(import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfig.projectId);
-export const db = getFirestore(app);
+
+// Initialize Firestore with long polling to bypass potential network restrictions in iframes
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  ignoreUndefinedProperties: true,
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});

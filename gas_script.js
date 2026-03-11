@@ -342,16 +342,44 @@ function deleteUser(username) {
   }
   return { success: true };
 }
-// เพิ่มฟังก์ชันนี้เพื่อให้รองรับการเปิด URL ผ่าน Browser หรือการดึงข้อมูลแบบ GET
 function doGet(e) {
-  const action = e.parameter.action;
-  
-  if (action === 'getData') {
-    const result = getMainInventory();
-    return ContentService.createTextOutput(JSON.stringify(result.items))
+  try {
+    // รับค่า action จาก URL (เช่น ?action=getMainInventory)
+    const action = e.parameter.action;
+    let result = {};
+
+    // ถ้าแอปเรียกมาเฉยๆ โดยไม่มี action ให้ส่งสถานะปกติไปก่อน (เป็น JSON)
+    if (!action) {
+      return ContentService.createTextOutput(JSON.stringify({ success: true, message: "API is ready" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // จัดการ Action ต่างๆ ที่ส่งมาแบบ GET
+    switch (action) {
+      case 'getMainInventory':
+        result = getMainInventory();
+        break;
+      case 'getVehicleInventory':
+        result = getVehicleInventory();
+        break;
+      case 'getDashboardData':
+        result = getDashboardData();
+        break;
+      case 'getUsers':
+        result = getUsers();
+        break;
+      case 'getVehicleTools':
+        result = getVehicleTools();
+        break;
+      default:
+        result = { success: false, message: 'Invalid GET action: ' + action };
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, message: error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
-  
-  return ContentService.createTextOutput("Service is running. Please use POST for data operations or ?action=getData to fetch inventory.")
-    .setMimeType(ContentService.MimeType.TEXT);
 }

@@ -19,7 +19,24 @@ export default function App() {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
-    setIsChecking(false);
+    
+    // Auto-sync check: if Firebase is empty, pull from Sheets
+    const checkAndSync = async () => {
+      try {
+        const { api } = await import('./services/api');
+        const usersResult = await api.getUsers();
+        if (usersResult.success && (!usersResult.users || usersResult.users.length === 0)) {
+          console.log('Firebase empty, auto-syncing from Google Sheets...');
+          await api.syncAllFromSheets();
+        }
+      } catch (e) {
+        console.error('Auto-sync failed:', e);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    
+    checkAndSync();
   }, []);
 
   const handleLogin = (userData: any) => {

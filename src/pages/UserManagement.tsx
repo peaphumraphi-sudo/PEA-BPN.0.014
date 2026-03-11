@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { Users, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, Save, X, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 import { cn } from '../utils/cn';
 
@@ -10,6 +10,7 @@ interface UserManagementProps {
 export function UserManagement({ user }: UserManagementProps) {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   
@@ -39,6 +40,24 @@ export function UserManagement({ user }: UserManagementProps) {
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await api.syncAllFromSheets();
+      if (response.success) {
+        alert('ซิงค์ข้อมูลผู้ใช้งานสำเร็จ');
+        loadData();
+      } else {
+        alert(`ผิดพลาด: ${response.message}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('เกิดข้อผิดพลาดในการซิงค์ข้อมูล');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleOpenModal = (userToEdit: any = null) => {
     if (userToEdit) {
@@ -124,12 +143,22 @@ export function UserManagement({ user }: UserManagementProps) {
             <p className="text-sm text-gray-500 mt-1">จัดการข้อมูลผู้ใช้งานและสิทธิ์การเข้าถึง</p>
           </div>
         </div>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors flex items-center gap-2 shrink-0 shadow-lg shadow-purple-500/25"
-        >
-          <Plus size={20} /> เพิ่มผู้ใช้งาน
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button 
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl transition-colors flex items-center gap-2 shrink-0 shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+          >
+            <RefreshCw size={20} className={cn(isSyncing && "animate-spin")} />
+            {isSyncing ? 'กำลังซิงค์...' : 'ซิงค์จาก Sheets'}
+          </button>
+          <button 
+            onClick={() => handleOpenModal()}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors flex items-center gap-2 shrink-0 shadow-lg shadow-purple-500/25"
+          >
+            <Plus size={20} /> เพิ่มผู้ใช้งาน
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
