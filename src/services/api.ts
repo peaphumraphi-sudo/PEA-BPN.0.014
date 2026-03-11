@@ -43,10 +43,12 @@ export const api = {
   },
 
   async fetchFromGoogleSheets(action: string = 'getMainInventory') {
-    if (!GAS_URL) return { success: false, message: 'ไม่ได้กำหนด URL ของ Google Apps Script' };
+    const url = GAS_URL?.trim();
+    if (!url) return { success: false, message: 'ไม่ได้กำหนด URL ของ Google Apps Script' };
     try {
+      console.log(`Fetching ${action} from Google Sheets...`);
       // Try GET first (faster, usually works for data fetching)
-      let response = await fetch(`${GAS_URL}?action=${action}`);
+      let response = await fetch(`${url}?action=${action}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -56,9 +58,9 @@ export const api = {
       
       // If GET returns the "Service is running" message, it means doGet is not configured for data
       // but doPost might be. Let's try POST.
-      if (text.includes('Service is running')) {
+      if (typeof text === 'string' && text.includes('Service is running')) {
         console.log('GET returned service message, trying POST...');
-        const postResponse = await fetch(GAS_URL, {
+        const postResponse = await fetch(url, {
           method: 'POST',
           body: JSON.stringify({ action })
         });
@@ -69,22 +71,30 @@ export const api = {
       }
 
       try {
+        if (typeof text !== 'string' || text.trim() === '') {
+          return { success: false, message: 'ได้รับข้อมูลว่างจาก Google Sheets' };
+        }
         const data = JSON.parse(text);
+        if (!data) {
+          return { success: false, message: 'ไม่สามารถแปลงข้อมูล JSON ได้' };
+        }
         // GAS returns the result object directly if using the new doGet/doPost
         return data.success !== undefined ? data : { success: true, items: data };
       } catch (parseError) {
-        console.error('Google Sheets Parse Error:', parseError, 'Response text:', text.substring(0, 100));
+        console.error('Google Sheets Parse Error:', parseError, 'Response text snippet:', typeof text === 'string' ? text.substring(0, 100) : 'not a string');
         return { success: false, message: 'ข้อมูลที่ได้รับจาก Google Sheets ไม่ถูกต้อง' };
       }
     } catch (error) {
       console.error('Google Sheets Fetch Error:', error);
-      return { success: false, message: 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้' };
+      return { success: false, message: `ไม่สามารถเชื่อมต่อกับ Google Sheets ได้: ${error instanceof Error ? error.message : String(error)}` };
     }
   },
 
   async syncAllFromSheets() {
-    if (!GAS_URL) return { success: false, message: 'ไม่ได้กำหนด URL ของ Google Apps Script' };
+    const url = GAS_URL?.trim();
+    if (!url) return { success: false, message: 'ไม่ได้กำหนด URL ของ Google Apps Script' };
     try {
+      console.log('Starting Sync All From Sheets...');
       const actions = ['getMainInventory', 'getVehicleInventory', 'getVehicleTools', 'getUsers'];
       const results = await Promise.all(actions.map(action => this.fetchFromGoogleSheets(action)));
       
@@ -92,30 +102,59 @@ export const api = {
         const action = actions[i];
         const result = results[i];
         
-        if (result.success) {
-          if (action === 'getMainInventory') {
+        console.log(`Processing result for ${action}:`, result?.success ? 'Success' : 'Failed');
+        
+        if (result && result.success) {
+          if (action === 'getMainInventory' && Array.isArray(result.items)) {
+            console.log(`Syncing ${result.items.length} items to mainInventory`);
             for (const item of result.items) {
-              await setDoc(doc(db, "mainInventory", item.id), item);
+              if (item && item.id) {
+                const id = String(item.id).trim();
+                if (id) {
+                  await setDoc(doc(db, "mainInventory", id), item);
+                }
+              }
             }
-          } else if (action === 'getVehicleInventory') {
+          } else if (action === 'getVehicleInventory' && Array.isArray(result.items)) {
+            console.log(`Syncing ${result.items.length} items to vehicleInventory`);
             for (const item of result.items) {
-              await setDoc(doc(db, "vehicleInventory", item.id), item);
+              if (item && item.id) {
+                const id = String(item.id).trim();
+                if (id) {
+                  await setDoc(doc(db, "vehicleInventory", id), item);
+                }
+              }
             }
-          } else if (action === 'getVehicleTools') {
+          } else if (action === 'getVehicleTools' && Array.isArray(result.tools)) {
+            console.log(`Syncing ${result.tools.length} tools to vehicleTools`);
             for (const tool of result.tools) {
-              await setDoc(doc(db, "vehicleTools", tool.id), tool);
+              if (tool && tool.id) {
+                const id = String(tool.id).trim();
+                if (id) {
+                  await setDoc(doc(db, "vehicleTools", id), tool);
+                }
+              }
             }
-          } else if (action === 'getUsers') {
+          } else if (action === 'getUsers' && Array.isArray(result.users)) {
+            console.log(`Syncing ${result.users.length} users to users`);
             for (const user of result.users) {
-              await setDoc(doc(db, "users", user.username), user);
+              if (user && user.username) {
+                const username = String(user.username).trim();
+                if (username) {
+                  await setDoc(doc(db, "users", username), user);
+                }
+              }
             }
           }
+        } else {
+          console.warn(`Sync failed for ${action}:`, result?.message || 'Unknown error');
         }
       }
+      console.log('Sync All From Sheets Completed Successfully');
       return { success: true, message: 'ซิงค์ข้อมูลจาก Google Sheets สำเร็จ' };
     } catch (error) {
       console.error('Sync All From Sheets Error:', error);
-      return { success: false, message: 'เกิดข้อผิดพลาดในการซิงค์ข้อมูล' };
+      return { success: false, message: `เกิดข้อผิดพลาดในการซิงค์ข้อมูล: ${error instanceof Error ? error.message : String(error)}` };
     }
   },
 
