@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, AlertCircle, Loader2 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { api } from '../services/api';
 
 interface LoginProps {
@@ -43,52 +44,62 @@ export function Login({ onLogin }: LoginProps) {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-800/20 blur-[100px]"></div>
       </div>
 
-      <div className="w-full max-w-md bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-800 p-8 z-10">
-        <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-800 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-lg shadow-purple-500/30 transform -rotate-6 hover:rotate-0 transition-transform duration-300">
-            <span className="text-3xl font-black text-white tracking-tighter">PEA</span>
+      <div className="w-full max-w-md bg-black/60 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-white/5 p-10 z-10 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50"></div>
+        
+        <div className="text-center mb-12">
+          <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-purple-900 rounded-3xl mx-auto flex items-center justify-center mb-8 shadow-2xl shadow-purple-500/40 transform -rotate-12 hover:rotate-0 transition-all duration-500 border border-white/10">
+            <span className="text-4xl font-black text-white tracking-tighter">PEA</span>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">BPN Inventory</h1>
-          <p className="text-purple-300/80 text-sm font-medium">ระบบจัดการคลังพัสดุ</p>
+          <h1 className="text-4xl font-black text-white mb-3 tracking-tighter uppercase">BPN Inventory</h1>
+          <div className="flex items-center justify-center gap-2">
+            <div className="h-px w-8 bg-purple-500/30"></div>
+            <p className="text-purple-400/80 text-[10px] font-black uppercase tracking-[0.3em]">ระบบจัดการคลังพัสดุ</p>
+            <div className="h-px w-8 bg-purple-500/30"></div>
+          </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 backdrop-blur-sm"
+          >
             <AlertCircle size={20} className="shrink-0" />
-            <p className="text-sm font-medium">{error}</p>
-          </div>
+            <p className="text-xs font-bold uppercase tracking-tight">{error}</p>
+          </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-400 ml-1">ชื่อผู้ใช้</label>
-            <div className="relative">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">ชื่อผู้ใช้</label>
+            <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <User size={18} className="text-gray-500" />
+                <User size={18} className="text-gray-600 group-focus-within:text-purple-500 transition-colors" />
               </div>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-gray-950 border border-gray-800 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all placeholder:text-gray-600"
-                placeholder="กรอกชื่อผู้ใช้"
+                className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all placeholder:text-gray-700 font-bold text-sm"
+                placeholder="USERNAME"
                 required
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-400 ml-1">รหัสผ่าน</label>
-            <div className="relative">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">รหัสผ่าน</label>
+            <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Lock size={18} className="text-gray-500" />
+                <Lock size={18} className="text-gray-600 group-focus-within:text-purple-500 transition-colors" />
               </div>
               <input
                 type="password"
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                className="w-full bg-gray-950 border border-gray-800 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all placeholder:text-gray-600"
-                placeholder="กรอกรหัสผ่าน"
+                className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all placeholder:text-gray-700 font-bold text-sm"
+                placeholder="PASSWORD"
                 required
               />
             </div>
@@ -97,19 +108,24 @@ export function Login({ onLogin }: LoginProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl py-3.5 mt-4 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black rounded-2xl py-4 mt-6 transition-all duration-300 flex items-center justify-center gap-3 shadow-2xl shadow-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-xs border border-white/10"
           >
             {isLoading ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
-              <span>เข้าสู่ระบบ</span>
+              <>
+                <span>เข้าสู่ระบบ</span>
+                <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                </div>
+              </>
             )}
           </button>
         </form>
         
-        <div className="mt-8 text-center">
-          <p className="text-xs text-gray-600">
-            เฉพาะผู้ดูแลระบบและผู้ใช้ที่ได้รับอนุญาตเท่านั้น
+        <div className="mt-10 text-center">
+          <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+            Authorized Personnel Only
           </p>
         </div>
       </div>

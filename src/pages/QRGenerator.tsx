@@ -53,72 +53,72 @@ export function QRGenerator() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
       {/* Header - Hidden on print */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-indigo-900/50 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
             <QrCode size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">สร้าง QR Code พัสดุ</h1>
-            <p className="text-sm text-gray-500 mt-1">เลือกรายการพัสดุเพื่อสร้างและพิมพ์รหัส QR</p>
+            <h1 className="text-2xl font-bold tracking-tight">สร้าง QR Code พัสดุ</h1>
+            <p className="text-sm text-gray-400 mt-1">เลือกรายการพัสดุเพื่อสร้างและพิมพ์รหัส QR</p>
           </div>
         </div>
 
         <button 
           onClick={handlePrint}
           disabled={selectedIds.length === 0}
-          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl transition-all shadow-xl shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 uppercase tracking-widest"
         >
           <Printer size={20} /> พิมพ์ QR Code ({selectedIds.length})
         </button>
       </div>
 
       {/* Search and Selection - Hidden on print */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center gap-4 print:hidden">
+      <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800 flex flex-col sm:flex-row items-center gap-4 print:hidden backdrop-blur-sm">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
           <input 
             type="text" 
             placeholder="ค้นหารหัส หรือ ชื่อพัสดุ..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm"
+            className="w-full pl-10 pr-4 py-2 bg-black border border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm text-white"
           />
         </div>
         
         <button 
           onClick={selectAll}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors shrink-0"
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-400 hover:bg-white/5 rounded-lg transition-colors shrink-0 uppercase tracking-widest"
         >
-          {selectedIds.length === filteredItems.length ? <CheckSquare size={18} className="text-indigo-600" /> : <Square size={18} />}
+          {selectedIds.length === filteredItems.length ? <CheckSquare size={18} className="text-indigo-400" /> : <Square size={18} />}
           เลือกทั้งหมด
         </button>
       </div>
 
       {/* Item List - Hidden on print */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden print:hidden">
-        <div className="divide-y divide-gray-100">
+      <div className="bg-gray-900/50 rounded-2xl border border-gray-800 overflow-hidden print:hidden backdrop-blur-sm">
+        <div className="divide-y divide-gray-800">
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500">กำลังโหลดข้อมูล...</div>
+            <div className="p-8 text-center text-gray-500 font-bold uppercase tracking-widest">กำลังโหลดข้อมูล...</div>
           ) : filteredItems.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">ไม่พบข้อมูล</div>
+            <div className="p-8 text-center text-gray-500 font-bold uppercase tracking-widest">ไม่พบข้อมูล</div>
           ) : (
             filteredItems.map((item) => (
               <div 
                 key={item.id} 
                 onClick={() => toggleSelect(item.id)}
-                className={`p-4 flex items-center gap-4 cursor-pointer transition-colors ${selectedIds.includes(item.id) ? 'bg-indigo-50/50' : 'hover:bg-gray-50'}`}
+                className={`p-4 flex items-center gap-4 cursor-pointer transition-colors ${selectedIds.includes(item.id) ? 'bg-indigo-900/20' : 'hover:bg-white/5'}`}
               >
-                <div className={`shrink-0 ${selectedIds.includes(item.id) ? 'text-indigo-600' : 'text-gray-300'}`}>
+                <div className={`shrink-0 ${selectedIds.includes(item.id) ? 'text-indigo-400' : 'text-gray-700'}`}>
                   {selectedIds.includes(item.id) ? <CheckSquare size={24} /> : <Square size={24} />}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900">{item.name}</h3>
-                  <p className="text-xs text-gray-500 font-mono">{item.id}</p>
+                  <h3 className="font-bold text-white">{item.name}</h3>
+                  <p className="text-[10px] text-gray-500 font-mono uppercase tracking-tight">{item.id}</p>
                 </div>
-                <div className="shrink-0 p-2 bg-white border border-gray-100 rounded-lg shadow-sm">
+                <div className="shrink-0 p-2 bg-white rounded-lg shadow-sm">
                   <QRCodeSVG value={item.id} size={40} />
                 </div>
               </div>
@@ -134,7 +134,7 @@ export function QRGenerator() {
             <div key={item.id} className="border border-gray-300 p-4 flex flex-col items-center justify-center text-center space-y-2 break-inside-avoid">
               <QRCodeSVG value={item.id} size={120} level="H" />
               <div className="space-y-1">
-                <p className="text-xs font-bold font-mono uppercase tracking-wider">{item.id}</p>
+                <p className="text-xs font-bold font-mono uppercase tracking-wider text-black">{item.id}</p>
                 <p className="text-[10px] text-gray-600 leading-tight max-w-[150px]">{item.name}</p>
               </div>
             </div>
