@@ -1,5 +1,5 @@
 {
-  "name": "PEA BPN Inventory 0.014",
+  "name": "PEA BPN Inventory ",
   "description": "ระบบจัดการคลังพัสดุ PEA BPN พร้อมระบบสแกน QR Code และบันทึกข้อมูลลง Google Sheets",
   "requestFramePermissions": [
     "camera",
