@@ -85,7 +85,12 @@ export function UserManagement({ user }: UserManagementProps) {
 
     setIsSubmitting(true);
     try {
-      const userData = { username, pin, name, role };
+      const userData = { 
+        username: username.trim(), 
+        pin: pin.trim(), 
+        name: name.trim(), 
+        role 
+      };
       let response;
       
       if (editingUser) {

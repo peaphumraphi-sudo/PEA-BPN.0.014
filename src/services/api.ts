@@ -259,22 +259,39 @@ export const api = {
 
       switch (action) {
         case 'login': {
-          const q = query(collection(db, "users"), where("username", "==", payload.username), where("pin", "==", payload.pin));
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
-            result = { success: true, user: { username: userData.username, role: userData.role, name: userData.name } };
+          // Use getDoc by ID since username is the document ID - more reliable and no index needed
+          const userRef = doc(db, "users", payload.username);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            if (String(userData.pin) === String(payload.pin)) {
+              result = { 
+                success: true, 
+                user: { 
+                  username: userData.username, 
+                  role: userData.role, 
+                  name: userData.name 
+                } 
+              };
+            } else {
+              result = { success: false, message: 'รหัส PIN ไม่ถูกต้อง' };
+            }
           } else {
-            // Fallback to Google Sheets for login if Firebase is empty/new
+            // Fallback to Google Sheets for login if not in Firestore
             const sheetsUsers = await this.fetchFromGoogleSheets('getUsers');
             let userFound = false;
 
             if (sheetsUsers.success && sheetsUsers.users) {
-              const user = sheetsUsers.users.find((u: any) => u.username === payload.username && u.pin === payload.pin);
+              const user = sheetsUsers.users.find((u: any) => 
+                String(u.username) === String(payload.username) && 
+                String(u.pin) === String(payload.pin)
+              );
+              
               if (user) {
-                // Auto-populate Firebase with this user
+                // Auto-populate Firebase with this user for future logins
                 try {
-                  await setDoc(doc(db, "users", user.username), user);
+                  await setDoc(doc(db, "users", String(user.username)), user);
                 } catch (e) {
                   console.error('Failed to auto-populate user to Firestore:', e);
                 }
@@ -283,12 +300,14 @@ export const api = {
               }
             }
 
-            // Final fallback to mock users if not found in Firestore or Sheets
-            // This ensures the user can always log in with default credentials (admin/1234)
             if (!userFound) {
+              // Final fallback to mock users
               const mockData = this.getMockData('getUsers', {});
               const mockUsers = mockData.users || [];
-              const mockUser = mockUsers.find((u: any) => u.username === payload.username && u.pin === payload.pin);
+              const mockUser = mockUsers.find((u: any) => 
+                String(u.username) === String(payload.username) && 
+                String(u.pin) === String(payload.pin)
+              );
               
               if (mockUser) {
                 result = { success: true, user: { username: mockUser.username, role: mockUser.role, name: mockUser.name } };

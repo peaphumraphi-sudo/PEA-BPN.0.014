@@ -20,7 +20,7 @@ export function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
 
     try {
-      const response = await api.login(username, pin);
+      const response = await api.login(username.trim(), pin.trim());
       
       if (response.success) {
         onLogin(response.user);
