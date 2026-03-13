@@ -140,18 +140,18 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/10">
             <Truck size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">คลังพัสดุประจำรถ</h1>
-            <p className="text-sm text-gray-500 mt-1">เช็คลิสต์วัสดุอุปกรณ์ประจำรถ</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">คลังพัสดุประจำรถ</h1>
+            <p className="text-sm text-purple-400/60 mt-1 font-medium">เช็คลิสต์วัสดุอุปกรณ์ประจำรถ</p>
           </div>
         </div>
         <button 
           onClick={handleSyncFromSheets}
           disabled={isSyncing}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-500/20 disabled:opacity-50 text-sm font-bold"
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 text-sm font-bold uppercase tracking-wider"
         >
           <RefreshCw size={18} className={cn(isSyncing && "animate-spin")} />
           {isSyncing ? 'กำลังซิงค์...' : 'ซิงค์ข้อมูล'}
@@ -159,29 +159,29 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-2">
-          <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-            <User size={16} className="text-gray-400" /> ผู้ส่งมอบ (ชื่อ-นามสกุล)
+        <div className="bg-white/5 backdrop-blur-xl p-4 rounded-2xl shadow-2xl border border-white/5 space-y-2">
+          <label className="text-sm font-semibold text-gray-400 flex items-center gap-2 ml-1">
+            <User size={16} className="text-purple-400/60" /> ผู้ส่งมอบ (ชื่อ-นามสกุล)
           </label>
           <input 
             type="text" 
             list="user-list"
             value={sender}
             onChange={(e) => setSender(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm"
+            className="w-full px-4 py-2 bg-black border border-white/10 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm placeholder:text-gray-700"
             placeholder="พิมพ์หรือเลือกชื่อผู้ส่งมอบ"
           />
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-2">
-          <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-            <User size={16} className="text-gray-400" /> ผู้รับมอบ (ชื่อ-นามสกุล)
+        <div className="bg-white/5 backdrop-blur-xl p-4 rounded-2xl shadow-2xl border border-white/5 space-y-2">
+          <label className="text-sm font-semibold text-gray-400 flex items-center gap-2 ml-1">
+            <User size={16} className="text-purple-400/60" /> ผู้รับมอบ (ชื่อ-นามสกุล)
           </label>
           <input 
             type="text" 
             list="user-list"
             value={receiver}
             onChange={(e) => setReceiver(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm"
+            className="w-full px-4 py-2 bg-black border border-white/10 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm placeholder:text-gray-700"
             placeholder="พิมพ์หรือเลือกชื่อผู้รับมอบ"
           />
         </div>
@@ -195,13 +195,13 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
 
       <div className="flex flex-col sm:flex-row items-center gap-2 mb-4">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
           <input 
             type="text" 
             placeholder="ค้นหารหัส หรือ ชื่อพัสดุ..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm shadow-sm"
+            className="w-full pl-10 pr-4 py-2 bg-black border border-white/10 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm shadow-sm placeholder:text-gray-700"
           />
         </div>
         
@@ -209,41 +209,41 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="w-full appearance-none pl-10 pr-8 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm shadow-sm text-gray-700"
+            className="w-full appearance-none pl-10 pr-8 py-2 bg-black border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm shadow-sm text-gray-300"
           >
             <option value="all">สถานะทั้งหมด</option>
             <option value="normal">ปกติ</option>
             <option value="low">ต่ำกว่าเกณฑ์</option>
           </select>
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/5 overflow-hidden">
+        <div className="p-4 bg-white/5 border-b border-white/5 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <h2 className="font-bold text-gray-900">รายการวัสดุอุปกรณ์</h2>
+            <h2 className="font-bold text-white tracking-tight">รายการวัสดุอุปกรณ์</h2>
             <div className="flex gap-2">
               <button 
                 onClick={() => handleSort('id')}
-                className={cn("text-xs flex items-center gap-1 px-2 py-1 rounded-md transition-colors", sortConfig?.key === 'id' ? "bg-purple-100 text-purple-700" : "hover:bg-gray-200 text-gray-600")}
+                className={cn("text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all font-bold uppercase tracking-wider", sortConfig?.key === 'id' ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "hover:bg-white/5 text-gray-500 border border-transparent")}
               >
                 รหัส <ArrowUpDown size={12} />
               </button>
               <button 
                 onClick={() => handleSort('name')}
-                className={cn("text-xs flex items-center gap-1 px-2 py-1 rounded-md transition-colors", sortConfig?.key === 'name' ? "bg-purple-100 text-purple-700" : "hover:bg-gray-200 text-gray-600")}
+                className={cn("text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all font-bold uppercase tracking-wider", sortConfig?.key === 'name' ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "hover:bg-white/5 text-gray-500 border border-transparent")}
               >
                 ชื่อ <ArrowUpDown size={12} />
               </button>
             </div>
           </div>
-          <span className="text-xs font-medium text-gray-500 bg-gray-200 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-bold text-purple-400/60 bg-purple-500/10 px-3 py-1 rounded-full uppercase tracking-widest border border-purple-500/10">
             {filteredAndSortedItems.length} รายการ
           </span>
         </div>
         
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-white/5">
           {isLoading ? (
             <div className="p-8 text-center text-gray-500">กำลังโหลดข้อมูล...</div>
           ) : filteredAndSortedItems.length === 0 ? (
@@ -253,37 +253,37 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
               {filteredAndSortedItems.map((item) => {
                 const isLowStock = item.current < item.min;
                 return (
-                  <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-0">
+                  <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors border-b border-white/5 last:border-0">
                     <div className="flex items-start gap-3">
                       <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                        isLowStock ? "bg-red-50 text-red-600" : "bg-purple-50 text-purple-600"
+                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
+                        isLowStock ? "bg-red-500/20 text-red-400 border border-red-500/20" : "bg-purple-500/20 text-purple-400 border border-purple-500/20"
                       )}>
                         <Truck size={20} />
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                          <h3 className="font-bold text-gray-900">{item.name}</h3>
+                          <h3 className="font-bold text-white tracking-tight">{item.name}</h3>
                           {isLowStock && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 uppercase tracking-wider">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 uppercase tracking-wider">
                               <AlertCircle size={10} /> ต่ำกว่าเกณฑ์
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tight">{item.id}</p>
-                          <span className="text-[10px] text-gray-400">•</span>
-                          <span className="text-[10px] text-gray-500 font-medium">เกณฑ์ขั้นต่ำ: {item.min}</span>
+                          <p className="text-[10px] text-gray-500 font-mono uppercase tracking-tight">{item.id}</p>
+                          <span className="text-[10px] text-gray-700">•</span>
+                          <span className="text-[10px] text-purple-400/60 font-bold uppercase tracking-wider">เกณฑ์ขั้นต่ำ: {item.min}</span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between sm:justify-end gap-3 bg-gray-50 sm:bg-transparent px-3 py-2 sm:p-0 rounded-xl border border-gray-100 sm:border-0">
-                      <span className="text-xs font-bold text-gray-500 sm:hidden">จำนวนปัจจุบัน:</span>
+                    <div className="flex items-center justify-between sm:justify-end gap-3 bg-black/40 sm:bg-transparent px-3 py-2 sm:p-0 rounded-xl border border-white/5 sm:border-0">
+                      <span className="text-xs font-bold text-gray-500 sm:hidden uppercase tracking-wider">จำนวนปัจจุบัน:</span>
                       <div className="flex items-center gap-1">
                         <button 
                           onClick={() => handleQuantityChange(item.id, item.current - 1)}
-                          className="w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
+                          className="w-9 h-9 flex items-center justify-center bg-black border border-white/10 rounded-lg text-gray-400 hover:bg-white/5 hover:border-purple-500/50 active:scale-95 transition-all shadow-sm"
                         >
                           <Minus size={16} />
                         </button>
@@ -293,15 +293,15 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
                           value={item.current}
                           onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
                           className={cn(
-                            "w-14 text-center h-9 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all font-bold text-sm",
+                            "w-14 text-center h-9 bg-black border rounded-lg focus:outline-none focus:ring-2 transition-all font-bold text-sm",
                             isLowStock 
-                              ? "border-red-300 focus:border-red-500 focus:ring-red-500/50 text-red-600" 
-                              : "border-gray-200 focus:border-purple-500 focus:ring-purple-500/50 text-gray-900"
+                              ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/30 text-red-400" 
+                              : "border-white/10 focus:border-purple-500 focus:ring-purple-500/30 text-white"
                           )}
                         />
                         <button 
                           onClick={() => handleQuantityChange(item.id, item.current + 1)}
-                          className="w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:scale-95 transition-all shadow-sm"
+                          className="w-9 h-9 flex items-center justify-center bg-black border border-white/10 rounded-lg text-gray-400 hover:bg-white/5 hover:border-purple-500/50 active:scale-95 transition-all shadow-sm"
                         >
                           <Plus size={16} />
                         </button>
@@ -319,7 +319,7 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
         <button 
           onClick={handleSubmit}
           disabled={isLoading || isSubmitting}
-          className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl transition-all shadow-xl shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+          className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl transition-all shadow-xl shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98] uppercase tracking-widest"
         >
           {isSubmitting ? (
             <RefreshCw size={20} className="animate-spin" />
@@ -334,17 +334,17 @@ export function VehicleInventory({ user }: VehicleInventoryProps) {
       {successMessage && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className={cn(
-            "px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border backdrop-blur-sm",
-            successMessage.includes('ผิดพลาด') ? "bg-red-600 text-white border-red-500/20" : 
-            successMessage.includes('กำลังบันทึก') ? "bg-indigo-600 text-white border-indigo-500/20" :
-            "bg-green-600 text-white border-green-500/20"
+            "px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border backdrop-blur-md",
+            successMessage.includes('ผิดพลาด') ? "bg-red-600/90 text-white border-red-500/20" : 
+            successMessage.includes('กำลังบันทึก') ? "bg-purple-600/90 text-white border-purple-500/20" :
+            "bg-emerald-600/90 text-white border-emerald-500/20"
           )}>
             <div className="bg-white/20 p-1 rounded-full">
               {successMessage.includes('ผิดพลาด') ? <AlertCircle size={18} /> : 
                successMessage.includes('กำลังบันทึก') ? <RefreshCw size={18} className="animate-spin" /> :
                <CheckCircle2 size={18} />}
             </div>
-            <span className="font-bold text-sm whitespace-nowrap">{successMessage}</span>
+            <span className="font-bold text-sm whitespace-nowrap tracking-tight">{successMessage}</span>
           </div>
         </div>
       )}

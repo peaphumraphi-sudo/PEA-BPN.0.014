@@ -87,7 +87,7 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">แดชบอร์ดสรุปผล</h1>
+        <h1 className="text-2xl font-bold text-white tracking-tight">แดชบอร์ดสรุปผล</h1>
         <div className="flex items-center gap-2">
           <button 
             onClick={handleSyncFromSheets}
@@ -99,7 +99,7 @@ export function Dashboard() {
           </button>
           <button 
             onClick={loadData}
-            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-purple-600 hover:border-purple-200 transition-colors shadow-sm"
+            className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-purple-400 hover:border-purple-500/50 transition-colors shadow-sm"
             title="รีเฟรช"
           >
             <RefreshCw size={20} />
@@ -109,51 +109,51 @@ export function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+        <div className="bg-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/5 flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/10">
             <Package size={24} />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">พัสดุทั้งหมดในคลัง</p>
-            <h3 className="text-3xl font-bold text-gray-900">{data?.totalItems.toLocaleString()} <span className="text-sm font-normal text-gray-500">รายการ</span></h3>
+            <p className="text-sm font-medium text-purple-400/60 mb-1">พัสดุทั้งหมดในคลัง</p>
+            <h3 className="text-3xl font-bold text-white">{data?.totalItems.toLocaleString()} <span className="text-sm font-normal text-purple-400/40">รายการ</span></h3>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+        <div className="bg-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/5 flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-red-500/20 text-red-400 border border-red-500/20 flex items-center justify-center shrink-0 shadow-lg shadow-red-500/10">
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">พัสดุต่ำกว่าเกณฑ์</p>
-            <h3 className="text-3xl font-bold text-red-600">{data?.lowStockItems} <span className="text-sm font-normal text-gray-500">รายการ</span></h3>
+            <p className="text-sm font-medium text-purple-400/60 mb-1">พัสดุต่ำกว่าเกณฑ์</p>
+            <h3 className="text-3xl font-bold text-red-400">{data?.lowStockItems} <span className="text-sm font-normal text-purple-400/40">รายการ</span></h3>
           </div>
         </div>
       </div>
 
       {/* Low Stock Items List */}
       {data?.lowStockItemsList && data.lowStockItemsList.length > 0 && (
-        <div className="bg-red-50/50 rounded-2xl shadow-sm border border-red-100 overflow-hidden">
-          <div className="p-4 border-b border-red-100 flex items-center gap-2">
-            <AlertTriangle className="text-red-500" size={20} />
-            <h2 className="text-lg font-bold text-red-900">รายการพัสดุต่ำกว่าเกณฑ์</h2>
+        <div className="bg-red-500/5 rounded-2xl shadow-2xl border border-red-500/20 overflow-hidden">
+          <div className="p-4 border-b border-red-500/20 flex items-center gap-2 bg-red-500/10">
+            <AlertTriangle className="text-red-400" size={20} />
+            <h2 className="text-lg font-bold text-red-400">รายการพัสดุต่ำกว่าเกณฑ์</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-red-100/50 text-red-800 text-sm border-b border-red-100">
-                  <th className="p-4 font-medium">รหัสพัสดุ</th>
-                  <th className="p-4 font-medium">ชื่อพัสดุ</th>
-                  <th className="p-4 font-medium text-right">คงเหลือ</th>
-                  <th className="p-4 font-medium text-right">ขั้นต่ำ</th>
+                <tr className="bg-black/20 text-red-400/60 text-sm border-b border-red-500/20">
+                  <th className="p-4 font-semibold uppercase tracking-wider">รหัสพัสดุ</th>
+                  <th className="p-4 font-semibold uppercase tracking-wider">ชื่อพัสดุ</th>
+                  <th className="p-4 font-semibold uppercase tracking-wider text-right">คงเหลือ</th>
+                  <th className="p-4 font-semibold uppercase tracking-wider text-right">ขั้นต่ำ</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
                 {data.lowStockItemsList.map((item: any) => (
-                  <tr key={item.id} className="border-b border-red-50 hover:bg-red-50 transition-colors">
-                    <td className="p-4 text-red-900 font-mono">{item.id}</td>
-                    <td className="p-4 font-medium text-red-900">{item.name}</td>
-                    <td className="p-4 text-right font-bold text-red-600">{item.current}</td>
-                    <td className="p-4 text-right text-red-800">{item.min}</td>
+                  <tr key={item.id} className="border-b border-red-500/10 hover:bg-red-500/5 transition-colors">
+                    <td className="p-4 text-red-200 font-mono">{item.id}</td>
+                    <td className="p-4 font-medium text-red-100">{item.name}</td>
+                    <td className="p-4 text-right font-bold text-red-400">{item.current}</td>
+                    <td className="p-4 text-right text-red-300/60">{item.min}</td>
                   </tr>
                 ))}
               </tbody>
@@ -165,18 +165,19 @@ export function Dashboard() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bar Chart */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">สถิติการรับเข้า-เบิกออก (7 วันล่าสุด)</h2>
+        <div className="bg-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/5 lg:col-span-2">
+          <h2 className="text-lg font-bold text-white mb-4 tracking-tight">สถิติการรับเข้า-เบิกออก (7 วันล่าสุด)</h2>
           <div className="h-[300px] w-full">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff10" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
                   <Tooltip 
-                    cursor={{ fill: '#f9fafb' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: '#ffffff05' }}
+                    contentStyle={{ backgroundColor: '#111827', borderRadius: '16px', border: '1px solid #ffffff10', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)' }}
+                    itemStyle={{ fontWeight: 600 }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                   <Bar dataKey="in" name="รับเข้า" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
@@ -184,7 +185,7 @@ export function Dashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
                 ไม่มีข้อมูลการทำรายการ
               </div>
             )}
@@ -192,8 +193,8 @@ export function Dashboard() {
         </div>
 
         {/* Pie Chart */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">สัดส่วนสถานะพัสดุ</h2>
+        <div className="bg-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/5">
+          <h2 className="text-lg font-bold text-white mb-4 tracking-tight">สัดส่วนสถานะพัสดุ</h2>
           <div className="h-[300px] w-full flex flex-col items-center justify-center">
             {data?.totalItems > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -212,14 +213,14 @@ export function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    itemStyle={{ color: '#111827', fontWeight: 500 }}
+                    contentStyle={{ backgroundColor: '#111827', borderRadius: '16px', border: '1px solid #ffffff10', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)' }}
+                    itemStyle={{ color: '#fff', fontWeight: 600 }}
                   />
                   <Legend iconType="circle" verticalAlign="bottom" />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
                 ไม่มีข้อมูลพัสดุ
               </div>
             )}
@@ -228,42 +229,42 @@ export function Dashboard() {
       </div>
 
       {/* Recent Transactions */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900">รายการเคลื่อนไหวล่าสุด</h2>
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/5 overflow-hidden">
+        <div className="p-6 border-b border-white/5">
+          <h2 className="text-lg font-bold text-white tracking-tight">รายการเคลื่อนไหวล่าสุด</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 text-gray-500 text-sm border-b border-gray-100">
-                <th className="p-4 font-medium">วันที่-เวลา</th>
-                <th className="p-4 font-medium">ประเภท</th>
-                <th className="p-4 font-medium">รายการพัสดุ</th>
-                <th className="p-4 font-medium text-right">จำนวน</th>
-                <th className="p-4 font-medium">ผู้ดำเนินการ</th>
+              <tr className="bg-white/5 text-purple-300/60 text-sm border-b border-white/5">
+                <th className="p-4 font-semibold uppercase tracking-wider">วันที่-เวลา</th>
+                <th className="p-4 font-semibold uppercase tracking-wider">ประเภท</th>
+                <th className="p-4 font-semibold uppercase tracking-wider">รายการพัสดุ</th>
+                <th className="p-4 font-semibold uppercase tracking-wider text-right">จำนวน</th>
+                <th className="p-4 font-semibold uppercase tracking-wider">ผู้ดำเนินการ</th>
               </tr>
             </thead>
             <tbody className="text-sm">
               {data?.recentTransactions.map((tx: any) => (
-                <tr key={tx.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <td className="p-4 text-gray-500">{tx.date}</td>
+                <tr key={tx.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <td className="p-4 text-gray-400">{tx.date}</td>
                   <td className="p-4">
                     <span className={cn(
-                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium",
-                      tx.type === 'in' ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                      "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
+                      tx.type === 'in' ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                     )}>
                       {tx.type === 'in' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                       {tx.type === 'in' ? 'รับเข้า' : 'เบิกออก'}
                     </span>
                   </td>
-                  <td className="p-4 font-medium text-gray-900">{tx.item}</td>
+                  <td className="p-4 font-medium text-white">{tx.item}</td>
                   <td className={cn(
                     "p-4 text-right font-bold",
-                    tx.type === 'in' ? "text-emerald-600" : "text-orange-600"
+                    tx.type === 'in' ? "text-emerald-400" : "text-orange-400"
                   )}>
                     {tx.type === 'in' ? '+' : '-'}{tx.qty}
                   </td>
-                  <td className="p-4 text-gray-600">{tx.user}</td>
+                  <td className="p-4 text-gray-300">{tx.user}</td>
                 </tr>
               ))}
             </tbody>

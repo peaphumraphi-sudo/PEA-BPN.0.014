@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
+import { Menu } from './pages/Menu';
 import { Dashboard } from './pages/Dashboard';
 import { MainInventory } from './pages/MainInventory';
 import { QRGenerator } from './pages/QRGenerator';
@@ -60,7 +61,7 @@ export default function App() {
       <Routes>
         <Route 
           path="/login" 
-          element={!user ? <Login onLogin={handleLogin} /> : <Navigate to={user.role === 'admin' ? '/' : '/vehicle'} replace />} 
+          element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} 
         />
         
         <Route
@@ -68,7 +69,20 @@ export default function App() {
           element={
             user ? (
               <Layout user={user} onLogout={handleLogout}>
-                {user.role === 'admin' ? <Dashboard /> : <Navigate to="/vehicle" replace />}
+                <Menu user={user} onLogout={handleLogout} />
+              </Layout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            user ? (
+              <Layout user={user} onLogout={handleLogout}>
+                {user.role === 'admin' ? <Dashboard /> : <Navigate to="/" replace />}
               </Layout>
             ) : (
               <Navigate to="/login" replace />

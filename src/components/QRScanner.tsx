@@ -59,18 +59,18 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-4 bg-gray-900 text-white flex justify-between items-center shrink-0">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+      <div className="bg-[#0A0A0A] rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] border border-white/10">
+        <div className="p-4 bg-black/50 backdrop-blur-md border-b border-white/10 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
               <QrCode size={18} />
             </div>
-            <h3 className="font-bold">สแกน QR Code</h3>
+            <h3 className="font-bold tracking-tight">สแกน QR Code</h3>
           </div>
           <button 
             onClick={onClose}
-            className="p-1 hover:bg-white/20 rounded-full transition-colors"
+            className="p-2 hover:bg-white/10 rounded-full transition-all text-gray-400 hover:text-white"
           >
             <X size={20} />
           </button>
@@ -80,31 +80,31 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           <div 
             id="qr-reader" 
             ref={scannerRef} 
-            className="w-full overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 aspect-square flex items-center justify-center"
+            className="w-full overflow-hidden rounded-2xl border-2 border-dashed border-white/10 bg-black aspect-square flex items-center justify-center relative"
           >
             {!error && (
-              <div className="text-center p-8 text-gray-400">
-                <div className="animate-pulse flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                    <CameraOff size={24} />
+              <div className="text-center p-8 text-gray-600">
+                <div className="animate-pulse flex flex-col items-center gap-3">
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                    <CameraOff size={28} />
                   </div>
-                  <p className="text-xs">กำลังเรียกใช้งานกล้อง...</p>
+                  <p className="text-xs font-bold uppercase tracking-widest">กำลังเรียกใช้งานกล้อง...</p>
                 </div>
               </div>
             )}
           </div>
           
           {error && (
-            <div className="mt-4 p-4 bg-red-50 text-red-700 text-sm rounded-2xl border border-red-100">
+            <div className="mt-4 p-4 bg-red-500/10 text-red-400 text-sm rounded-2xl border border-red-500/20 backdrop-blur-md">
               <div className="flex gap-3">
                 <AlertCircle className="shrink-0" size={18} />
                 <div className="space-y-2">
-                  <p className="font-semibold">พบปัญหาการเข้าถึงกล้อง</p>
-                  <p className="text-xs leading-relaxed opacity-90">{error}</p>
+                  <p className="font-bold tracking-tight">พบปัญหาการเข้าถึงกล้อง</p>
+                  <p className="text-xs leading-relaxed opacity-80">{error}</p>
                   {isInIframe && (
                     <button 
                       onClick={openInNewTab}
-                      className="flex items-center gap-1.5 text-xs font-bold underline hover:text-red-800 transition-colors"
+                      className="flex items-center gap-1.5 text-xs font-bold underline hover:text-red-300 transition-colors"
                     >
                       <ExternalLink size={14} /> เปิดในหน้าต่างใหม่เพื่อใช้กล้อง
                     </button>
@@ -117,22 +117,22 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           <div className="mt-8 space-y-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-100"></span>
+                <span className="w-full border-t border-white/5"></span>
               </div>
               <div className="relative flex justify-center text-[10px] uppercase tracking-widest">
-                <span className="bg-white px-3 text-gray-400 font-bold">หรือกรอกรหัสด้วยตนเอง</span>
+                <span className="bg-[#0A0A0A] px-3 text-gray-600 font-bold">หรือกรอกรหัสด้วยตนเอง</span>
               </div>
             </div>
 
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
                 <input
                   type="text"
                   value={manualId}
                   onChange={(e) => setManualId(e.target.value)}
                   placeholder="กรอกรหัสพัสดุที่นี่..."
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm font-medium"
+                  className="w-full pl-10 pr-4 py-3 bg-black border border-white/10 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-sm font-bold placeholder:text-gray-800"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && manualId.trim()) {
                       onScanSuccess(manualId.trim());
@@ -142,16 +142,16 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
               </div>
               <button
                 onClick={() => manualId.trim() && onScanSuccess(manualId.trim())}
-                className="px-6 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors text-sm font-bold shadow-lg shadow-purple-500/20 active:scale-95"
+                className="px-6 bg-purple-600 text-white rounded-xl hover:bg-purple-500 transition-all text-sm font-bold shadow-lg shadow-purple-500/20 active:scale-95 uppercase tracking-widest"
               >
                 ตกลง
               </button>
             </div>
           </div>
 
-          <div className="mt-8 flex items-center justify-center gap-2 text-gray-400">
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping"></div>
-            <p className="text-[11px] font-medium uppercase tracking-wider">
+          <div className="mt-8 flex items-center justify-center gap-2 text-gray-600">
+            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-ping"></div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-purple-400/40">
               System Ready for Scanning
             </p>
           </div>
